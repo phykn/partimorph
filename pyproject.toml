@@ -1,7 +1,7 @@
 [project]
 name = "partimorph"
 version = "0.1.0"
-description = "Particle shape analysis tool including Wadell roundness, circularity, and sphericity."
+description = "A high-performance Python library for comprehensive particle shape analysis and visualization."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
