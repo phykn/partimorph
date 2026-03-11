@@ -18,7 +18,7 @@ A high-performance Python library for comprehensive particle shape analysis. It 
 import partimorph as pm
 
 # 1. Create a sample mask (e.g., Star shape)
-mask = pm.create_star_mask(size=200, points=5)
+mask = pm.utils.create_star_mask(shape=(400, 400), center=(200, 200), outer_radius=100, inner_radius=40)
 
 # 2. Execute comprehensive shape analysis
 results = pm.analyze_mask(mask)
@@ -29,7 +29,7 @@ print(f"Circularity: {results['circularity']['val']:.2f}")
 print(f"Sphericity: {results['sphericity']['val']:.2f}")
 
 # 4. Visualize the results
-pm.plot_analysis_results(mask, results)
+pm.utils.plot_analysis_results(mask, results)
 ```
 
 ## 🛠 Installation
