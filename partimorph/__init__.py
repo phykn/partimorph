@@ -1,5 +1,5 @@
 from .analyzer import analyze_mask
-from .create_mask import (
+from .utils.create_mask import (
     create_circle_mask,
     create_ellipse_mask,
     create_rectangle_mask,
@@ -8,4 +8,4 @@ from .create_mask import (
     create_pentagon_mask,
     create_star_mask,
 )
-from .plot import plot_analysis_results
+from .utils.plot import plot_analysis_results
