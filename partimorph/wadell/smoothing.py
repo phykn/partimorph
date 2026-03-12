@@ -47,13 +47,13 @@ def _regularization_matrix(
     """An NxN matrix for imposing elasticity and rigidity to snakes."""
 
     d = alpha * np.array([-2, 1, 0, 0]) + beta * np.array([-6, 4, -1, 0])
-    
+
     # Distance modulo matrix
     D = np.fromfunction(
         lambda i, j: np.minimum((i - j) % n, (j - i) % n),
         (n, n),
         dtype = int,
     )
-    
+
     A = d[np.minimum(D, len(d) - 1)]
     return np.linalg.inv(np.eye(n) - A)

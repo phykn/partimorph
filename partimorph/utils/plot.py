@@ -1,5 +1,6 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+
 from matplotlib.patches import Circle, Polygon
 
 
@@ -9,7 +10,7 @@ def plot_analysis_results(
     figsize: tuple[int, int] = (8, 8),
     title_prefix: str = "Analysis Results",
 ) -> None:
-
+    """Plot mask and overlay analysis results."""
     fig, ax = plt.subplots(figsize=figsize)
     ax.imshow(mask, cmap="gray", alpha=0.3)
 

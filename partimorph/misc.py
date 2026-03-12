@@ -3,7 +3,7 @@ import numpy as np
 
 
 def get_contours(mask: np.ndarray) -> tuple[np.ndarray, ...]:
-
+    """Return external contours for a binary mask."""
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     return contours
@@ -13,7 +13,7 @@ def crop_mask(
     mask: np.ndarray,
     pad: int = 1,
 ) -> tuple[np.ndarray, int, int]:
-
+    """Crop mask to bounding box with optional padding."""
     mask_uint8 = mask if mask.dtype == np.uint8 else mask.astype(np.uint8)
     x, y, w, h = cv2.boundingRect(mask_uint8)
 

@@ -9,7 +9,7 @@ from .wadell import compute_roundness as _compute_roundness
 
 
 def find_inscribed_circle(mask: np.ndarray) -> tuple[int, int, float]:
-
+    """Find the maximum inscribed circle center and radius."""
     cropped_mask, pad_x0, pad_y0 = crop_mask(mask, pad=1)
 
     if cropped_mask.size == 0:
@@ -22,13 +22,13 @@ def find_inscribed_circle(mask: np.ndarray) -> tuple[int, int, float]:
 
     cx = int(cx_crop) + pad_x0
     cy = int(cy_crop) + pad_y0
-    r = float(dist[cy_crop, cx_crop])
+    radius = float(dist[cy_crop, cx_crop])
 
-    return cx, cy, r
+    return cx, cy, radius
 
 
 def find_enclosing_circle(mask: np.ndarray) -> tuple[int, int, float]:
-
+    """Find the minimum enclosing circle center and radius."""
     if not np.any(mask):
         return 0, 0, 0.0
 
@@ -40,13 +40,13 @@ def find_enclosing_circle(mask: np.ndarray) -> tuple[int, int, float]:
 
     x = int(round(cx))
     y = int(round(cy))
-    val_r = float(r)
+    radius = float(r)
 
-    return x, y, val_r
+    return x, y, radius
 
 
 def fit_ellipse(mask: np.ndarray) -> dict | None:
-
+    """Fit an ellipse to the mask contour; returns None if not possible."""
     contours = get_contours(mask)
 
     if not contours:
@@ -74,13 +74,25 @@ def fit_ellipse(mask: np.ndarray) -> dict | None:
     }
 
 
-def compute_roundness(mask: np.ndarray) -> float:
-
-    return _compute_roundness(mask)
+def compute_roundness(
+    mask: np.ndarray,
+    max_dev_thresh: float = 0.3,
+    circle_fit_thresh: float = 0.98,
+    alpha_ratio: float = 0.05,
+    beta_ratio: float = 0.001,
+) -> float:
+    """Compute Wadell roundness for the mask."""
+    return _compute_roundness(
+        mask,
+        max_dev_thresh = max_dev_thresh,
+        circle_fit_thresh = circle_fit_thresh,
+        alpha_ratio = alpha_ratio,
+        beta_ratio = beta_ratio,
+    )
 
 
 def compute_circularity(mask: np.ndarray) -> float:
-
+    """Compute circularity as 4πA/P²."""
     cropped_mask, _, _ = crop_mask(mask, pad=1)
 
     if cropped_mask.size == 0:
@@ -93,6 +105,6 @@ def compute_circularity(mask: np.ndarray) -> float:
 
     area = float(np.count_nonzero(mask))
 
-    val_circularity = 4.0 * np.pi * area / (perimeter ** 2)
+    val_circularity = 4.0 * np.pi * area / (perimeter**2)
 
     return val_circularity

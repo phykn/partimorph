@@ -16,16 +16,16 @@ import numpy as np
 from scipy import ndimage
 
 from .boundary import extract_boundary
-from .smoothing import smooth_boundary
-from .discretize import discretize_boundary, classify_concave_convex
 from .corner import compute_corner_circles
+from .discretize import classify_concave_convex, discretize_boundary
+from .smoothing import smooth_boundary
 from ..misc import crop_mask
 
 
 def compute_roundness(
     mask: np.ndarray,
-    max_dev_thresh: float = 2.0,
-    circle_fit_thresh: float = 0.7,
+    max_dev_thresh: float = 0.3,
+    circle_fit_thresh: float = 0.98,
     alpha_ratio: float = 0.05,
     beta_ratio: float = 0.001,
 ) -> float:
@@ -59,7 +59,8 @@ def compute_roundness(
 
     idx = np.argmax(dist)
     max_y, max_x = np.unravel_index(idx, dist.shape)
-    r_max_pos = np.array([float(max_x), float(max_y)])
+    # Keep (y, x) ordering to match discretization and corner fitting.
+    r_max_pos = np.array([float(max_y), float(max_x)])
 
     # --- Boundary extraction ---
     boundary = extract_boundary(mask)
@@ -68,10 +69,12 @@ def compute_roundness(
         return 0.0
 
     # --- Perimeter for smoothing weights ---
-    perimeter = float(cv2.arcLength(
-        boundary[:-1].astype(np.float32).reshape(-1, 1, 2),
-        closed = True,
-    ))
+    perimeter = float(
+        cv2.arcLength(
+            boundary[:-1].astype(np.float32).reshape(-1, 1, 2),
+            closed = True,
+        )
+    )
 
     if perimeter < 1e-6:
         return 0.0

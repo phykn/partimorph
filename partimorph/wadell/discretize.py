@@ -17,8 +17,9 @@ def discretize_boundary(
         (M, 2) keypoints filtered from the boundary.
     """
 
-    x = boundary[:, 0]
-    y = boundary[:, 1]
+    # Swap to (y, x) to mirror wadell_rs-main pipeline
+    x = boundary[:, 1]
+    y = boundary[:, 0]
     n = len(x)
 
     seg_start = 0
