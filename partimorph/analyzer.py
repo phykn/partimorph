@@ -45,19 +45,23 @@ def analyze_mask(
     if use_roundness:
         roundness_kwargs = roundness_params or {}
         results["roundness"] = {
-            "val": np.clip(
-                compute_roundness(padded_mask, **roundness_kwargs),
-                0.0,
-                1.0,
+            "val": float(
+                np.clip(
+                    compute_roundness(padded_mask, **roundness_kwargs),
+                    0.0,
+                    1.0,
+                )
             )
         }
 
     if use_circularity:
         results["circularity"] = {
-            "val": np.clip(
-                compute_circularity(padded_mask),
-                0.0,
-                1.0,
+            "val": float(
+                np.clip(
+                    compute_circularity(padded_mask),
+                    0.0,
+                    1.0,
+                )
             )
         }
 
@@ -66,6 +70,7 @@ def analyze_mask(
         cx_en, cy_en, r_en = find_enclosing_circle(padded_mask)
 
         sphericity_val = np.clip(r_in / r_en, 0.0, 1.0) if r_en > 0.0 else 0.0
+        sphericity_val = float(sphericity_val)
 
         results["sphericity"] = {
             "val": sphericity_val,

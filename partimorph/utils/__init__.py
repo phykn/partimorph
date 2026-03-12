@@ -8,3 +8,4 @@ from .create_mask import (
     create_triangle_mask,
 )
 from .plot import plot_analysis_results
+from .parametric_mask import create_fourier_particle_mask

@@ -80,13 +80,27 @@ def classify_concave_convex(
         v1[:, 0] * v2[:, 0] + v1[:, 1] * v2[:, 1],
     )
 
-    concave_locs = np.where(angle > 0)[0]
-    roll_idx = concave_locs[0] if len(concave_locs) > 0 else np.argmax(angle)
+    area = _signed_area(keypoints)
+    orientation = 1.0 if area >= 0.0 else -1.0
+    oriented = angle * orientation
+
+    concave_locs = np.where(oriented < 0.0)[0]
+    roll_idx = concave_locs[0] if len(concave_locs) > 0 else int(np.argmax(oriented))
 
     kp = np.roll(keypoints, -roll_idx, axis=0)
-    angle = np.roll(angle, -roll_idx)
+    oriented = np.roll(oriented, -roll_idx)
 
-    return kp[angle > 0], kp[angle < 0]
+    return kp[oriented < 0.0], kp[oriented > 0.0]
+
+
+def _signed_area(points: np.ndarray) -> float:
+    """Signed polygon area (shoelace). Positive for CCW."""
+
+    x = points[:, 0]
+    y = points[:, 1]
+    area = np.dot(x, np.roll(y, -1)) - np.dot(y, np.roll(x, -1))
+
+    return 0.5 * float(area)
 
 
 def _maxlinedev(

@@ -33,8 +33,8 @@ def smooth_boundary(
     alpha = alpha_ratio * perimeter
     beta = beta_ratio * perimeter
 
-    inv_matrix = _regularization_matrix(n, alpha, beta)
-    smoothed = np.matmul(inv_matrix, coords)
+    reg_matrix = _regularization_matrix(n, alpha, beta)
+    smoothed = np.linalg.solve(reg_matrix, coords)
 
     return smoothed
 
@@ -56,4 +56,4 @@ def _regularization_matrix(
     )
 
     A = d[np.minimum(D, len(d) - 1)]
-    return np.linalg.inv(np.eye(n) - A)
+    return np.eye(n) - A

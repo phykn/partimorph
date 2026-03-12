@@ -39,6 +39,9 @@ def compute_corner_circles(
 
             radius, center = _nsphere_fit(pts_slice)
 
+            if radius <= 1e-6 or not np.isfinite(radius):
+                continue
+
             dist_center = np.linalg.norm(center - r_max_pos)
             dist_boundary = np.linalg.norm(pts_slice - r_max_pos, axis=1).mean()
 
