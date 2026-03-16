@@ -62,8 +62,6 @@ def find_enclosing_circle(mask: np.ndarray) -> CircleData | None:
     return {"x": x, "y": y, "r": r}
 
 
-
-
 def fit_ellipse(mask: np.ndarray) -> EllipseData | None:
     contours = get_contours(mask)
 
