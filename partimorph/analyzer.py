@@ -1,25 +1,38 @@
 import numpy as np
 from scipy import ndimage
+from typing import TypedDict
 
+from .fitting import CircleData
 from .metrics import (
+    compute_aspect_ratio,
     compute_circularity,
     compute_roundness,
-    find_enclosing_circle,
-    find_inscribed_circle,
-    fit_ellipse,
+    compute_sphericity,
 )
+
+
+class AnalysisResult(TypedDict, total=False):
+    roundness: dict | None
+    circularity: dict | None
+    sphericity: dict | None
+    aspect_ratio: dict | None
 
 
 def analyze_mask(
     mask: np.ndarray,
+    *,
     use_ellipse: bool = True,
     use_roundness: bool = True,
     use_circularity: bool = True,
     use_sphericity: bool = True,
     roundness_params: dict[str, float] | None = None,
-) -> dict:
-    """Compute selected shape metrics for a binary mask."""
+    eps: float = 1e-3,
+) -> AnalysisResult | None:
+    if not np.any(mask):
+        return None
+
     mask = ndimage.binary_fill_holes(mask).astype(np.uint8)
+
     padded_mask = np.pad(
         mask,
         pad_width = 1,
@@ -27,63 +40,32 @@ def analyze_mask(
         constant_values = 0,
     )
 
-    results: dict[str, object] = {}
+    results: AnalysisResult = {}
 
     if use_ellipse:
-        ellipse_data = fit_ellipse(padded_mask)
-        if ellipse_data is not None:
-            ellipse_data["bbox"] -= 1.0
-            results["ellipse"] = {
-                "val": ellipse_data["ratio"],
-                "major": ellipse_data["major"],
-                "minor": ellipse_data["minor"],
-                "bbox": ellipse_data["bbox"],
-            }
-        else:
-            results["ellipse"] = None
+        res = compute_aspect_ratio(padded_mask, eps=eps)
+        if res is not None:
+            if res.get("ellipse"):
+                res["ellipse"]["x"] -= 1
+                res["ellipse"]["y"] -= 1
+                if res["ellipse"].get("bbox"):
+                    res["ellipse"]["bbox"] = [[x - 1, y - 1] for x, y in res["ellipse"]["bbox"]]
+        results["aspect_ratio"] = res
 
     if use_roundness:
-        roundness_kwargs = roundness_params or {}
-        results["roundness"] = {
-            "val": float(
-                np.clip(
-                    compute_roundness(padded_mask, **roundness_kwargs),
-                    0.0,
-                    1.0,
-                )
-            )
-        }
+        r_params = roundness_params or {}
+        results["roundness"] = compute_roundness(padded_mask, **r_params)
 
     if use_circularity:
-        results["circularity"] = {
-            "val": float(
-                np.clip(
-                    compute_circularity(padded_mask),
-                    0.0,
-                    1.0,
-                )
-            )
-        }
+        results["circularity"] = compute_circularity(padded_mask, eps=eps)
 
     if use_sphericity:
-        cx_in, cy_in, r_in = find_inscribed_circle(padded_mask)
-        cx_en, cy_en, r_en = find_enclosing_circle(padded_mask)
-
-        sphericity_val = np.clip(r_in / r_en, 0.0, 1.0) if r_en > 0.0 else 0.0
-        sphericity_val = float(sphericity_val)
-
-        results["sphericity"] = {
-            "val": sphericity_val,
-            "inscribed": {
-                "x": cx_in - 1,
-                "y": cy_in - 1,
-                "r": r_in,
-            },
-            "enclosing": {
-                "x": cx_en - 1,
-                "y": cy_en - 1,
-                "r": r_en,
-            },
-        }
+        res = compute_sphericity(padded_mask, eps=eps)
+        if res is not None:
+            res["inscribed"]["x"] -= 1
+            res["inscribed"]["y"] -= 1
+            res["enclosing"]["x"] -= 1
+            res["enclosing"]["y"] -= 1
+        results["sphericity"] = res
 
     return results

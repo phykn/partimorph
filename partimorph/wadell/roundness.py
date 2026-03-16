@@ -48,14 +48,14 @@ def compute_roundness(
     mask, _, _ = crop_mask(mask, pad=1)
 
     if mask.size == 0:
-        return 0.0
+        return None
 
     # --- Maximum inscribed circle (R_max) ---
     dist = ndimage.distance_transform_edt(mask.astype(bool))
     r_max = float(np.max(dist))
 
     if r_max < 1e-6:
-        return 0.0
+        return None
 
     idx = np.argmax(dist)
     max_y, max_x = np.unravel_index(idx, dist.shape)
@@ -66,7 +66,7 @@ def compute_roundness(
     boundary = extract_boundary(mask)
 
     if len(boundary) < 4:
-        return 0.0
+        return None
 
     # --- Perimeter for smoothing weights ---
     perimeter = float(
@@ -77,7 +77,7 @@ def compute_roundness(
     )
 
     if perimeter < 1e-6:
-        return 0.0
+        return None
 
     # --- Smooth boundary ---
     smoothed = smooth_boundary(
@@ -91,12 +91,12 @@ def compute_roundness(
     keypoints = discretize_boundary(smoothed, max_dev_thresh)
 
     if len(keypoints) < 3:
-        return 0.0
+        return None
 
     _, convex_points = classify_concave_convex(keypoints)
 
     if len(convex_points) < 2:
-        return 0.0
+        return None
 
     radii, _ = compute_corner_circles(
         convex_points,
@@ -107,6 +107,6 @@ def compute_roundness(
     )
 
     if len(radii) == 0:
-        return 0.0
+        return None
 
     return float(np.mean(radii) / r_max)
