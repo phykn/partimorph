@@ -62,8 +62,6 @@ def find_enclosing_circle(mask: np.ndarray) -> CircleData | None:
     return {"x": x, "y": y, "r": r}
 
 
-
-
 def fit_ellipse(mask: np.ndarray) -> EllipseData | None:
     contours = get_contours(mask)
 
@@ -79,8 +77,8 @@ def fit_ellipse(mask: np.ndarray) -> EllipseData | None:
     rad = np.deg2rad(angle)
     cos_a, sin_a = np.cos(rad), np.sin(rad)
 
-    vec_w = np.array([cos_a, -sin_a])
-    vec_h = np.array([sin_a, cos_a])
+    vec_w = np.array([cos_a, sin_a])
+    vec_h = np.array([-sin_a, cos_a])
 
     proj_w = pts @ vec_w
     proj_h = pts @ vec_h
@@ -98,10 +96,22 @@ def fit_ellipse(mask: np.ndarray) -> EllipseData | None:
     cy = mid_w * vec_w[1] + mid_h * vec_h[1]
 
     bbox = [
-        [float(min_w * vec_w[0] + min_h * vec_h[0]), float(min_w * vec_w[1] + min_h * vec_h[1])],
-        [float(max_w * vec_w[0] + min_h * vec_h[0]), float(max_w * vec_w[1] + min_h * vec_h[1])],
-        [float(max_w * vec_w[0] + max_h * vec_h[0]), float(max_w * vec_w[1] + max_h * vec_h[1])],
-        [float(min_w * vec_w[0] + max_h * vec_h[0]), float(min_w * vec_w[1] + max_h * vec_h[1])],
+        [
+            float(min_w * vec_w[0] + min_h * vec_h[0]),
+            float(min_w * vec_w[1] + min_h * vec_h[1]),
+        ],
+        [
+            float(max_w * vec_w[0] + min_h * vec_h[0]),
+            float(max_w * vec_w[1] + min_h * vec_h[1]),
+        ],
+        [
+            float(max_w * vec_w[0] + max_h * vec_h[0]),
+            float(max_w * vec_w[1] + max_h * vec_h[1]),
+        ],
+        [
+            float(min_w * vec_w[0] + max_h * vec_h[0]),
+            float(min_w * vec_w[1] + max_h * vec_h[1]),
+        ],
     ]
 
     return {
