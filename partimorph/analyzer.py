@@ -29,20 +29,29 @@ def analyze_mask(
 ) -> AnalysisResult | None:
     if not np.any(mask):
         return None
+
     labeled, num_features = ndimage.label(mask)
+
     if num_features > 1:
         sizes = np.bincount(labeled.ravel())
         sizes[0] = 0
         mask = labeled == np.argmax(sizes)
+
     mask = ndimage.binary_fill_holes(mask).astype(np.uint8)
+
     results: AnalysisResult = {}
+
     if use_ellipse:
         results["aspect_ratio"] = compute_aspect_ratio(mask, eps=eps)
+
     if use_roundness:
         r_params = roundness_params or {}
         results["roundness"] = compute_roundness(mask, **r_params)
+
     if use_circularity:
         results["circularity"] = compute_circularity(mask, eps=eps)
+
     if use_sphericity:
         results["sphericity"] = compute_sphericity(mask, eps=eps)
+
     return results
