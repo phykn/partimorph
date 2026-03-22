@@ -44,32 +44,41 @@ def compute_corner_circles(
 
 
 def _nsphere_fit(x: np.ndarray) -> tuple[float, np.ndarray]:
-    x = x.reshape(-1, 2).copy()
-    m = x.shape[0]
+    pts = x.reshape(-1, 2).copy()
+    m = pts.shape[0]
 
-    xmin = x.min()
-    xmax = x.max()
+    x_min = float(pts[:, 0].min())
+    x_max = float(pts[:, 0].max())
+    y_min = float(pts[:, 1].min())
+    y_max = float(pts[:, 1].max())
 
-    scale = 0.5 * (xmax - xmin)
-    offset = 0.5 * (xmax + xmin)
+    x_span = x_max - x_min
+    y_span = y_max - y_min
+    scale = 0.5 * max(x_span, y_span)
 
     if scale < 1e-12:
-        return (0.0, x[0].copy())
+        return (0.0, pts[0].copy())
 
-    x -= offset
-    x /= scale
+    offset = np.array([(x_max + x_min) * 0.5, (y_max + y_min) * 0.5], dtype=np.float64)
+    pts_norm = (pts - offset) / scale
 
-    B = np.empty((m, 3), dtype=x.dtype)
-    B[:, :2] = x
+    B = np.empty((m, 3), dtype=pts_norm.dtype)
+    B[:, :2] = pts_norm
     B[:, 2] = 1.0
 
-    d = np.square(x).sum(axis=1)
+    d = np.square(pts_norm).sum(axis=1)
     y, *_ = lstsq(B, d, overwrite_a=True, overwrite_b=True)
 
-    c = 0.5 * y[:2]
-    r = float(np.sqrt(y[2] + np.square(c).sum()))
+    center_norm = 0.5 * y[:2]
+    r_norm = float(np.sqrt(y[2] + np.square(center_norm).sum()))
+    center = center_norm * scale + offset
 
-    r *= scale
-    c = c * scale + offset
+    if not np.all(np.isfinite(center)):
+        return (0.0, pts[0].copy())
 
-    return (r, c)
+    r = r_norm * scale
+
+    if not np.isfinite(r):
+        return (0.0, center)
+
+    return (r, center)
