@@ -31,41 +31,28 @@ def analyze_mask(
     if not np.any(mask):
         return None
 
-    mask = ndimage.binary_fill_holes(mask).astype(np.uint8)
+    # Keep only the largest connected component to avoid disjoint noise issues
+    labeled, num_features = ndimage.label(mask)
+    if num_features > 1:
+        sizes = np.bincount(labeled.ravel())
+        sizes[0] = 0  # Ignore background
+        mask = labeled == np.argmax(sizes)
 
-    padded_mask = np.pad(
-        mask,
-        pad_width = 1,
-        mode = "constant",
-        constant_values = 0,
-    )
+    mask = ndimage.binary_fill_holes(mask).astype(np.uint8)
 
     results: AnalysisResult = {}
 
     if use_ellipse:
-        res = compute_aspect_ratio(padded_mask, eps=eps)
-        if res is not None:
-            if res.get("ellipse"):
-                res["ellipse"]["x"] -= 1
-                res["ellipse"]["y"] -= 1
-                if res["ellipse"].get("bbox"):
-                    res["ellipse"]["bbox"] = [[x - 1, y - 1] for x, y in res["ellipse"]["bbox"]]
-        results["aspect_ratio"] = res
+        results["aspect_ratio"] = compute_aspect_ratio(mask, eps=eps)
 
     if use_roundness:
         r_params = roundness_params or {}
-        results["roundness"] = compute_roundness(padded_mask, **r_params)
+        results["roundness"] = compute_roundness(mask, **r_params)
 
     if use_circularity:
-        results["circularity"] = compute_circularity(padded_mask, eps=eps)
+        results["circularity"] = compute_circularity(mask, eps=eps)
 
     if use_sphericity:
-        res = compute_sphericity(padded_mask, eps=eps)
-        if res is not None:
-            res["inscribed"]["x"] -= 1
-            res["inscribed"]["y"] -= 1
-            res["enclosing"]["x"] -= 1
-            res["enclosing"]["y"] -= 1
-        results["sphericity"] = res
+        results["sphericity"] = compute_sphericity(mask, eps=eps)
 
     return results

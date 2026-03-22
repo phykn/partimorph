@@ -17,11 +17,27 @@ def plot_analysis_results(
     s_data = results.get("sphericity")
     if s_data:
         inc = s_data["inscribed"]
-        ax.add_patch(Circle((inc["x"], inc["y"]), inc["r"], color="blue", fill=False, label="Inscribed"))
+        ax.add_patch(
+            Circle(
+                (inc["x"], inc["y"]),
+                inc["r"],
+                color="blue",
+                fill=False,
+                label="Inscribed",
+            )
+        )
         ax.scatter(inc["x"], inc["y"], color="blue", marker="+")
 
         enc = s_data["enclosing"]
-        ax.add_patch(Circle((enc["x"], enc["y"]), enc["r"], color="red", fill=False, label="Enclosing"))
+        ax.add_patch(
+            Circle(
+                (enc["x"], enc["y"]),
+                enc["r"],
+                color="red",
+                fill=False,
+                label="Enclosing",
+            )
+        )
         ax.scatter(enc["x"], enc["y"], color="red", marker="x")
 
     ar_data = results.get("aspect_ratio")
@@ -33,20 +49,20 @@ def plot_analysis_results(
                     (ellipse["x"], ellipse["y"]),
                     ellipse["w"],
                     ellipse["h"],
-                    angle = ellipse["angle"],
-                    color = "yellow",
-                    fill = False,
-                    label = "Fitted Ellipse",
+                    angle=-ellipse["angle"],
+                    color="yellow",
+                    fill=False,
+                    label="Fitted Ellipse",
                 )
             )
             if ellipse.get("bbox"):
                 ax.add_patch(
                     Polygon(
                         ellipse["bbox"],
-                        closed = True,
-                        color = "green",
-                        fill = False,
-                        label = "Bounding Box",
+                        closed=True,
+                        color="green",
+                        fill=False,
+                        label="Bounding Box",
                     )
                 )
 

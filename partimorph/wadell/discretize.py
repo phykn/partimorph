@@ -98,7 +98,9 @@ def _signed_area(points: np.ndarray) -> float:
 
     x = points[:, 0]
     y = points[:, 1]
-    area = np.dot(x, np.roll(y, -1)) - np.dot(y, np.roll(x, -1))
+
+    # Avoids memory allocation overhead from np.roll by slicing
+    area = np.dot(x[:-1], y[1:]) + x[-1] * y[0] - np.dot(y[:-1], x[1:]) - y[-1] * x[0]
 
     return 0.5 * float(area)
 
@@ -112,15 +114,21 @@ def _maxlinedev(
     if len(x) <= 1:
         return 0.0, 0
 
-    eps = 1e-6
-    dist_end = np.hypot(x[0] - x[-1], y[0] - y[-1])
+    x0, x1 = x[0], x[-1]
+    y0, y1 = y[0], y[-1]
+    dx = x1 - x0
+    dy = y0 - y1
 
-    if dist_end < eps:
-        dist = np.hypot(x - x[0], y - y[0])
+    dist_end_sq = dx * dx + dy * dy
+
+    if dist_end_sq < 1e-12:
+        dx_arr = x - x0
+        dy_arr = y - y0
+        dist_sq = dx_arr * dx_arr + dy_arr * dy_arr
+        idx = int(np.argmax(dist_sq))
+        return float(np.sqrt(dist_sq[idx])), idx
     else:
-        dist = np.abs(
-            (y[0] - y[-1]) * x + (x[-1] - x[0]) * y + y[-1] * x[0] - y[0] * x[-1]
-        ) / dist_end
-
-    idx = int(np.argmax(dist))
-    return float(dist[idx]), idx
+        c = y1 * x0 - y0 * x1
+        dist_num = np.abs(dy * x + dx * y + c)
+        idx = int(np.argmax(dist_num))
+        return float(dist_num[idx] / np.sqrt(dist_end_sq)), idx

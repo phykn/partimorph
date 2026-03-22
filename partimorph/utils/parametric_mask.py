@@ -89,6 +89,7 @@ def create_fourier_particle_mask(
         sin_t=sin_search,
     )
 
+    # Scale down for invariant search time
     scale = min(1.0, 128.0 / major_axis)
     base_r_search = radius_search_raw * scale
     noise_search = noise_search_raw * major_axis * scale

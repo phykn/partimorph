@@ -22,7 +22,7 @@ def create_circle_mask(
     y, x = np.ogrid[:h, :w]
     cy, cx = center
 
-    return (x - cx) ** 2 + (y - cy) ** 2 <= radius ** 2
+    return (x - cx) ** 2 + (y - cy) ** 2 <= radius**2
 
 
 def create_ellipse_mask(
@@ -58,9 +58,9 @@ def create_square_mask(
     size: int,
 ) -> np.ndarray:
     return create_rectangle_mask(
-        shape = shape,
-        top_left = top_left,
-        bottom_right = (top_left[0] + size, top_left[1] + size),
+        shape=shape,
+        top_left=top_left,
+        bottom_right=(top_left[0] + size, top_left[1] + size),
     )
 
 
@@ -87,7 +87,7 @@ def create_pentagon_mask(
             cx + radius * np.cos(angles),
             cy + radius * np.sin(angles),
         ],
-        axis = 1,
+        axis=1,
     )
 
     return _create_poly_mask(shape, vertices)
@@ -110,7 +110,7 @@ def create_star_mask(
             cx + radii * np.cos(angles),
             cy + radii * np.sin(angles),
         ],
-        axis = 1,
+        axis=1,
     )
 
     return _create_poly_mask(shape, vertices)
