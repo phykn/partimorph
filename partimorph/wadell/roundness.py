@@ -14,7 +14,10 @@ def compute_roundness(
     circle_fit_thresh: float = 0.98,
     alpha_ratio: float = 0.05,
     beta_ratio: float = 0.001,
-) -> float:
+) -> float | None:
+    # Coordinate convention in this module:
+    # - geometric points: (x, y)
+    # - array indexing: (y, x)
     if mask.dtype != np.uint8:
         mask = mask.astype(np.uint8)
 
@@ -31,7 +34,7 @@ def compute_roundness(
 
     idx = np.argmax(dist)
     max_y, max_x = np.unravel_index(idx, dist.shape)
-    r_max_pos = np.array([float(max_y), float(max_x)])
+    r_max_pos_xy = np.array([float(max_x), float(max_y)])
 
     boundary = extract_boundary(mask)
 
@@ -60,7 +63,7 @@ def compute_roundness(
         return None
 
     radii, _ = compute_corner_circles(
-        convex_points, keypoints, r_max, r_max_pos, circle_fit_thresh
+        convex_points, keypoints, r_max, r_max_pos_xy, circle_fit_thresh
     )
 
     if len(radii) == 0:

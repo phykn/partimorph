@@ -1,5 +1,6 @@
 import numpy as np
 import skimage.measure
+from typing import TypedDict
 from .fitting import (
     CircleData,
     EllipseData,
@@ -11,6 +12,25 @@ from .wadell import compute_roundness as _compute_roundness
 from .misc import crop_mask
 
 
+class RoundnessResult(TypedDict):
+    val: float
+
+
+class CircularityResult(TypedDict):
+    val: float
+
+
+class SphericityResult(TypedDict):
+    val: float
+    inscribed: CircleData
+    enclosing: CircleData
+
+
+class AspectRatioResult(TypedDict):
+    val: float
+    ellipse: EllipseData
+
+
 def compute_roundness(
     mask: np.ndarray,
     *,
@@ -18,7 +38,7 @@ def compute_roundness(
     circle_fit_thresh: float = 0.98,
     alpha_ratio: float = 0.05,
     beta_ratio: float = 0.001,
-) -> dict[str, float] | None:
+) -> RoundnessResult | None:
     val = _compute_roundness(
         mask,
         max_dev_thresh=max_dev_thresh,
@@ -37,7 +57,7 @@ def compute_roundness(
 
 def compute_circularity(
     mask: np.ndarray, *, eps: float = 0.001
-) -> dict[str, float] | None:
+) -> CircularityResult | None:
     cropped_mask, _, _ = crop_mask(mask, pad=1)
 
     if cropped_mask.size == 0:
@@ -57,7 +77,7 @@ def compute_circularity(
 
 def compute_sphericity(
     mask: np.ndarray, *, eps: float = 0.001
-) -> dict[str, float | CircleData] | None:
+) -> SphericityResult | None:
     inscribed = find_inscribed_circle(mask)
     enclosing = find_enclosing_circle(mask)
 
@@ -77,7 +97,7 @@ def compute_sphericity(
 
 def compute_aspect_ratio(
     mask: np.ndarray, *, eps: float = 0.001
-) -> dict[str, float | EllipseData] | None:
+) -> AspectRatioResult | None:
     ellipse_data = fit_ellipse(mask)
 
     if ellipse_data is None:

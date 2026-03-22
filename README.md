@@ -2,6 +2,11 @@
 
 **PartiMorph** is a high-performance Python library designed for comprehensive and precise particle shape analysis. It provides scientific-grade quantification and visualization of morphology (Roundness, Circularity, Sphericity, Aspect Ratio) from binary masks, built with a focus on **numerical stability** and **computational speed**.
 
+## Coordinate Convention
+
+- Image coordinates are `(y, x)` for masks and centers.
+- Geometric point arrays are `(x, y)` (for contours, vertices, and plotting primitives).
+
 ---
 
 ## 🚀 Key Features
@@ -30,6 +35,7 @@ import partimorph as pm
 # 1. Generate a synthetic particle with target targets
 # achieving specific Sphericity and Roundness metrics
 mask, info = pm.utils.create_fourier_particle_mask(
+    # center is in (y, x) order
     shape=(512, 512), center=(256, 256),
     sphericity=0.75, roundness=0.8,
     base_radius=100, return_info=True
@@ -45,6 +51,22 @@ print(f"Sphericity (Riley): {results['sphericity']['val']:.4f}")
 # 4. Professional Visualization
 pm.utils.plot_analysis_results(mask, results, title="PartiMorph Analysis")
 ```
+
+### `analyze_mask()` 옵션
+
+| Parameter | Type | Default | Description |
+| :-- | :-- | :-- | :-- |
+| `use_aspect_ratio` | `bool` | `True` | Aspect Ratio 계산 여부 |
+| `use_roundness` | `bool` | `True` | Wadell Roundness 계산 여부 |
+| `use_circularity` | `bool` | `True` | Circularity 계산 여부 |
+| `use_sphericity` | `bool` | `True` | Sphericity 계산 여부 |
+| `roundness_params` | `dict[str, float] \\| None` | `None` | Roundness 내부 파라미터(`max_dev_thresh`, `circle_fit_thresh`, `alpha_ratio`, `beta_ratio`) |
+| `eps` | `float` | `0.001` | 분모가 0에 가까운 경우를 피하기 위한 안정성 임계값 |
+
+반환 규칙:
+- `mask`가 비어 있으면 `None`을 반환합니다.
+- 반환 타입은 `AnalysisResult | None`입니다.
+- `use_*`가 `False`인 메트릭은 결과 dict에 키가 생성되지 않습니다.
 
 ---
 

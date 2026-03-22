@@ -68,7 +68,25 @@ def fit_ellipse(mask: np.ndarray) -> EllipseData | None:
 
     pts = np.concatenate(contours).astype(np.float32)
     if len(pts) < 5:
-        return None
+        rect = cv2.minAreaRect(pts)
+        (cx, cy), (w, h), angle = rect
+
+        if w <= 1e-06 or h <= 1e-06:
+            return None
+
+        box = cv2.boxPoints(rect)
+        bbox = [[float(x), float(y)] for x, y in box]
+
+        return {
+            "major": float(max(w, h)),
+            "minor": float(min(w, h)),
+            "x": float(cx),
+            "y": float(cy),
+            "angle": float(angle),
+            "w": float(w),
+            "h": float(h),
+            "bbox": bbox,
+        }
 
     _, _, angle = cv2.fitEllipse(pts)
     rad = np.deg2rad(angle)

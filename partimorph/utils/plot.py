@@ -1,11 +1,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from typing import Any, Mapping
 from matplotlib.patches import Circle, Ellipse, Polygon
 
 
 def plot_analysis_results(
     mask: np.ndarray,
-    results: dict,
+    results: Mapping[str, Any],
     *,
     figsize: tuple[int, int] = (8, 8),
     title: str = "Analysis Results",

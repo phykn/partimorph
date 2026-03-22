@@ -1,8 +1,11 @@
 import numpy as np
 from scipy import ndimage
 from typing import TypedDict
-from .fitting import CircleData
 from .metrics import (
+    AspectRatioResult,
+    CircularityResult,
+    RoundnessResult,
+    SphericityResult,
     compute_aspect_ratio,
     compute_circularity,
     compute_roundness,
@@ -11,22 +14,28 @@ from .metrics import (
 
 
 class AnalysisResult(TypedDict, total=False):
-    roundness: dict | None
-    circularity: dict | None
-    sphericity: dict | None
-    aspect_ratio: dict | None
+    roundness: RoundnessResult | None
+    circularity: CircularityResult | None
+    sphericity: SphericityResult | None
+    aspect_ratio: AspectRatioResult | None
 
 
 def analyze_mask(
     mask: np.ndarray,
     *,
-    use_ellipse: bool = True,
+    use_aspect_ratio: bool = True,
     use_roundness: bool = True,
     use_circularity: bool = True,
     use_sphericity: bool = True,
     roundness_params: dict[str, float] | None = None,
     eps: float = 0.001,
 ) -> AnalysisResult | None:
+    """Analyze morphology metrics from a binary mask.
+
+    Preprocessing is applied before metric computation:
+    1) keep only the largest connected component (LCC) to remove small noise
+    2) fill internal holes to stabilize downstream geometric metrics
+    """
     if not np.any(mask):
         return None
 
@@ -41,7 +50,7 @@ def analyze_mask(
 
     results: AnalysisResult = {}
 
-    if use_ellipse:
+    if use_aspect_ratio:
         results["aspect_ratio"] = compute_aspect_ratio(mask, eps=eps)
 
     if use_roundness:

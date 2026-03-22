@@ -7,5 +7,10 @@ from .create_mask import (
     create_star_mask,
     create_triangle_mask,
 )
-from .plot import plot_analysis_results
 from .parametric_mask import create_fourier_particle_mask
+
+
+def plot_analysis_results(*args, **kwargs):
+    from .plot import plot_analysis_results as _plot_analysis_results
+
+    return _plot_analysis_results(*args, **kwargs)
