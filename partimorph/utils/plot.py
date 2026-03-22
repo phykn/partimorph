@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import numpy as np
-
 from matplotlib.patches import Circle, Ellipse, Polygon
 
 
@@ -13,7 +12,6 @@ def plot_analysis_results(
 ) -> None:
     fig, ax = plt.subplots(figsize=figsize)
     ax.imshow(mask, cmap="gray", alpha=0.3)
-
     s_data = results.get("sphericity")
     if s_data:
         inc = s_data["inscribed"]
@@ -27,7 +25,6 @@ def plot_analysis_results(
             )
         )
         ax.scatter(inc["x"], inc["y"], color="blue", marker="+")
-
         enc = s_data["enclosing"]
         ax.add_patch(
             Circle(
@@ -39,7 +36,6 @@ def plot_analysis_results(
             )
         )
         ax.scatter(enc["x"], enc["y"], color="red", marker="x")
-
     ar_data = results.get("aspect_ratio")
     if ar_data:
         ellipse = ar_data.get("ellipse")
@@ -65,23 +61,19 @@ def plot_analysis_results(
                         label="Bounding Box",
                     )
                 )
-
     labels = {
         "roundness": "Roundness",
         "circularity": "Circularity",
         "sphericity": "Sphericity",
         "aspect_ratio": "Aspect Ratio",
     }
-
     stats = []
     for key, label in labels.items():
         data = results.get(key)
         if data and "val" in data:
             stats.append(f"{label}: {data['val']:.2f}")
-
     ax.set_title(f"{title}\n{', '.join(stats)}")
     ax.legend(loc="upper right")
     ax.grid(True, linestyle="--", alpha=0.5)
-
     plt.tight_layout()
     plt.show()
