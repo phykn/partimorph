@@ -34,7 +34,7 @@ def create_fourier_particle_mask(
     max_iter: int = 20,
     amp_max: float = 0.45,
     metric_tol: float = 0.001,
-    target_tol: float = 0.1,
+    report_tol: float = 0.1,
     seed: int | None = None,
     return_info: bool = False,
 ) -> np.ndarray | tuple[np.ndarray, dict]:
@@ -43,6 +43,7 @@ def create_fourier_particle_mask(
     Args:
         shape: Output mask shape as (height, width).
         center: Particle center in image coordinates as (y, x).
+        report_tol: Tolerance used only for reporting `target_met`.
     """
     sphericity = float(np.clip(sphericity, 0.001, 1.0))
     roundness = float(np.clip(roundness, 0.0, 1.0))
@@ -64,10 +65,10 @@ def create_fourier_particle_mask(
         raise TypeError("num_angles must be an integer.")
     if num_angles < 3:
         raise ValueError("num_angles must be >= 3.")
-    if not np.isfinite(target_tol):
-        raise ValueError("target_tol must be a finite number.")
-    if target_tol < 0.0:
-        raise ValueError("target_tol must be >= 0.")
+    if not np.isfinite(report_tol):
+        raise ValueError("report_tol must be a finite number.")
+    if report_tol < 0.0:
+        raise ValueError("report_tol must be >= 0.")
 
     cy, cx = center
     if major_axis == 0.0:
@@ -88,8 +89,8 @@ def create_fourier_particle_mask(
                 "roundness_target": roundness,
                 "roundness_achieved": 0.0,
                 "abs_error": abs(roundness - 0.0),
-                "target_tol": target_tol,
-                "target_met": bool(abs(roundness - 0.0) <= target_tol),
+                "report_tol": report_tol,
+                "target_met": bool(abs(roundness - 0.0) <= report_tol),
                 "amplitude": 0.0,
                 "frequencies": frequencies.tolist(),
                 "phases": phases.tolist(),
@@ -176,8 +177,8 @@ def create_fourier_particle_mask(
             "roundness_target": roundness,
             "roundness_achieved": val_current,
             "abs_error": abs_error,
-            "target_tol": target_tol,
-            "target_met": bool(abs_error <= target_tol),
+            "report_tol": report_tol,
+            "target_met": bool(abs_error <= report_tol),
             "amplitude": target_amp,
             "frequencies": frequencies.tolist(),
             "phases": phases.tolist(),

@@ -2,7 +2,6 @@ import numpy as np
 
 
 def discretize_boundary(boundary: np.ndarray, max_dev_thresh: float) -> np.ndarray:
-    # `boundary` is expected in (x, y) order.
     x = boundary[:, 0]
     y = boundary[:, 1]
     n = len(x)

@@ -15,9 +15,6 @@ def compute_roundness(
     alpha_ratio: float = 0.05,
     beta_ratio: float = 0.001,
 ) -> float | None:
-    # Coordinate convention in this module:
-    # - geometric points: (x, y)
-    # - array indexing: (y, x)
     if mask.dtype != np.uint8:
         mask = mask.astype(np.uint8)
 

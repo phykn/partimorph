@@ -84,7 +84,9 @@ def plot_analysis_results(
             stats.append(f"{label}: {data['val']:.2f}")
 
     ax.set_title(f"{title}\n{', '.join(stats)}")
-    ax.legend(loc="upper right")
+    handles, labels = ax.get_legend_handles_labels()
+    if handles:
+        ax.legend(loc="upper right")
     ax.grid(True, linestyle="--", alpha=0.5)
     plt.tight_layout()
     plt.show()

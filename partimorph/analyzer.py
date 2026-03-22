@@ -11,6 +11,7 @@ from .metrics import (
     compute_roundness,
     compute_sphericity,
 )
+from .validation import validate_binary_mask
 
 
 class AnalysisResult(TypedDict, total=False):
@@ -36,17 +37,19 @@ def analyze_mask(
     1) keep only the largest connected component (LCC) to remove small noise
     2) fill internal holes to stabilize downstream geometric metrics
     """
-    if not np.any(mask):
+    mask_bool = validate_binary_mask(mask)
+
+    if not np.any(mask_bool):
         return None
 
-    labeled, num_features = ndimage.label(mask)
+    labeled, num_features = ndimage.label(mask_bool)
 
     if num_features > 1:
         sizes = np.bincount(labeled.ravel())
         sizes[0] = 0
-        mask = labeled == np.argmax(sizes)
+        mask_bool = labeled == np.argmax(sizes)
 
-    mask = ndimage.binary_fill_holes(mask).astype(np.uint8)
+    mask = ndimage.binary_fill_holes(mask_bool).astype(np.uint8)
 
     results: AnalysisResult = {}
 

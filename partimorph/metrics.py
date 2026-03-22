@@ -10,6 +10,7 @@ from .fitting import (
 )
 from .wadell import compute_roundness as _compute_roundness
 from .misc import crop_mask
+from .validation import validate_binary_mask
 
 
 class RoundnessResult(TypedDict):
@@ -39,6 +40,8 @@ def compute_roundness(
     alpha_ratio: float = 0.05,
     beta_ratio: float = 0.001,
 ) -> RoundnessResult | None:
+    mask = validate_binary_mask(mask)
+
     val = _compute_roundness(
         mask,
         max_dev_thresh=max_dev_thresh,
@@ -58,6 +61,8 @@ def compute_roundness(
 def compute_circularity(
     mask: np.ndarray, *, eps: float = 0.001
 ) -> CircularityResult | None:
+    mask = validate_binary_mask(mask)
+
     cropped_mask, _, _ = crop_mask(mask, pad=1)
 
     if cropped_mask.size == 0:
@@ -78,6 +83,8 @@ def compute_circularity(
 def compute_sphericity(
     mask: np.ndarray, *, eps: float = 0.001
 ) -> SphericityResult | None:
+    mask = validate_binary_mask(mask)
+
     inscribed = find_inscribed_circle(mask)
     enclosing = find_enclosing_circle(mask)
 
@@ -98,6 +105,8 @@ def compute_sphericity(
 def compute_aspect_ratio(
     mask: np.ndarray, *, eps: float = 0.001
 ) -> AspectRatioResult | None:
+    mask = validate_binary_mask(mask)
+
     ellipse_data = fit_ellipse(mask)
 
     if ellipse_data is None:
