@@ -72,7 +72,7 @@ def compute_roundness(
     perimeter = float(
         cv2.arcLength(
             boundary[:-1].astype(np.float32).reshape(-1, 1, 2),
-            closed = True,
+            closed=True,
         )
     )
 
@@ -82,9 +82,9 @@ def compute_roundness(
     # --- Smooth boundary ---
     smoothed = smooth_boundary(
         boundary,
-        perimeter = perimeter,
-        alpha_ratio = alpha_ratio,
-        beta_ratio = beta_ratio,
+        perimeter=perimeter,
+        alpha_ratio=alpha_ratio,
+        beta_ratio=beta_ratio,
     )
 
     # --- Discretize → concave/convex → corner circles ---

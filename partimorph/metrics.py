@@ -23,10 +23,10 @@ def compute_roundness(
 
     val = _compute_roundness(
         mask,
-        max_dev_thresh = max_dev_thresh,
-        circle_fit_thresh = circle_fit_thresh,
-        alpha_ratio = alpha_ratio,
-        beta_ratio = beta_ratio,
+        max_dev_thresh=max_dev_thresh,
+        circle_fit_thresh=circle_fit_thresh,
+        alpha_ratio=alpha_ratio,
+        beta_ratio=beta_ratio,
     )
 
     if val is None:

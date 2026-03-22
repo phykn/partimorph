@@ -52,7 +52,7 @@ def _regularization_matrix(
     D = np.fromfunction(
         lambda i, j: np.minimum((i - j) % n, (j - i) % n),
         (n, n),
-        dtype = int,
+        dtype=int,
     )
 
     A = d[np.minimum(D, len(d) - 1)]

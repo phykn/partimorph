@@ -92,10 +92,7 @@ def _boundary_tracing(region) -> np.ndarray:
         if idx_start >= len(x):
             return np.empty((0, 2), dtype=np.int64)
 
-    if (
-        binary[start[0] + 1, start[1]] == 0
-        and binary[start[0] + 1, start[1] - 1] == 0
-    ):
+    if binary[start[0] + 1, start[1]] == 0 and binary[start[0] + 1, start[1] - 1] == 0:
         backtrack_start = [start[0] + 1, start[1]]
     else:
         backtrack_start = [start[0], start[1] - 1]
