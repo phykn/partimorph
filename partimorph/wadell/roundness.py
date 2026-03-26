@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from scipy import ndimage
+
 from .boundary import extract_boundary
 from .corner import compute_corner_circles
 from .discretize import classify_concave_convex, discretize_boundary
@@ -15,55 +15,52 @@ def compute_roundness(
     alpha_ratio: float = 0.05,
     beta_ratio: float = 0.001,
 ) -> float | None:
+
     if mask.dtype != np.uint8:
         mask = mask.astype(np.uint8)
 
     mask, _, _ = crop_mask(mask, pad=1)
-
     if mask.size == 0:
         return None
 
-    dist = ndimage.distance_transform_edt(mask.astype(bool))
-    r_max = float(np.max(dist))
-
-    if r_max < 1e-06:
+    distance_transform = cv2.distanceTransform(mask, cv2.DIST_L2, cv2.DIST_MASK_PRECISE)
+    max_radius = float(np.max(distance_transform))
+    if max_radius < 1e-6:
         return None
 
-    idx = np.argmax(dist)
-    max_y, max_x = np.unravel_index(idx, dist.shape)
-    r_max_pos_xy = np.array([float(max_x), float(max_y)])
+    max_idx = np.argmax(distance_transform)
+    peak_y, peak_x = np.unravel_index(max_idx, distance_transform.shape)
+    max_radius_pos = np.array([float(peak_x), float(peak_y)])
 
     boundary = extract_boundary(mask)
-
     if len(boundary) < 4:
         return None
 
     perimeter = float(
         cv2.arcLength(boundary[:-1].astype(np.float32).reshape(-1, 1, 2), closed=True)
     )
-
-    if perimeter < 1e-06:
+    if perimeter < 1e-6:
         return None
 
-    smoothed = smooth_boundary(
-        boundary, perimeter=perimeter, alpha_ratio=alpha_ratio, beta_ratio=beta_ratio
+    smoothed_boundary = smooth_boundary(
+        boundary,
+        perimeter=perimeter,
+        alpha_ratio=alpha_ratio,
+        beta_ratio=beta_ratio,
     )
 
-    keypoints = discretize_boundary(smoothed, max_dev_thresh)
-
+    keypoints = discretize_boundary(smoothed_boundary, max_dev_thresh)
     if len(keypoints) < 3:
         return None
 
     _, convex_points = classify_concave_convex(keypoints)
-
     if len(convex_points) < 2:
         return None
 
     radii, _ = compute_corner_circles(
-        convex_points, keypoints, r_max, r_max_pos_xy, circle_fit_thresh
+        convex_points, keypoints, max_radius, max_radius_pos, circle_fit_thresh
     )
-
     if len(radii) == 0:
         return None
 
-    return float(np.mean(radii) / r_max)
+    return float(np.mean(radii) / max_radius)

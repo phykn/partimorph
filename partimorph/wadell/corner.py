@@ -9,22 +9,22 @@ def compute_corner_circles(
     r_max_pos: np.ndarray,
     circle_fit_thresh: float,
 ) -> tuple[np.ndarray, np.ndarray]:
-    n = len(convex_points)
+    num_points = len(convex_points)
 
     radii: list[float] = []
     centers: list[np.ndarray] = []
     start = 0
 
-    while start < n - 1:
-        for end in range(n, start + 2, -1):
-            pts_slice = convex_points[start:end]
-            radius, center = _nsphere_fit(pts_slice)
+    while start < num_points - 1:
+        for end in range(num_points, start + 2, -1):
+            point_subset = convex_points[start:end]
+            radius, center = nsphere_fit(point_subset)
 
             if radius <= 1e-06 or not np.isfinite(radius):
                 continue
 
             dist_center = np.linalg.norm(center - r_max_pos)
-            dist_boundary = np.linalg.norm(pts_slice - r_max_pos, axis=1).mean()
+            dist_boundary = np.linalg.norm(point_subset - r_max_pos, axis=1).mean()
 
             if dist_center < dist_boundary and radius < r_max:
                 dist_all = np.linalg.norm(keypoints - center, axis=1)
@@ -43,42 +43,42 @@ def compute_corner_circles(
     return (np.array(radii), np.array(centers))
 
 
-def _nsphere_fit(x: np.ndarray) -> tuple[float, np.ndarray]:
-    pts = x.reshape(-1, 2).copy()
-    m = pts.shape[0]
+def nsphere_fit(x: np.ndarray) -> tuple[float, np.ndarray]:
+    points = x.reshape(-1, 2).copy()
+    num_pts = points.shape[0]
 
-    x_min = float(pts[:, 0].min())
-    x_max = float(pts[:, 0].max())
-    y_min = float(pts[:, 1].min())
-    y_max = float(pts[:, 1].max())
+    x_min = float(points[:, 0].min())
+    x_max = float(points[:, 0].max())
+    y_min = float(points[:, 1].min())
+    y_max = float(points[:, 1].max())
 
     x_span = x_max - x_min
     y_span = y_max - y_min
     scale = 0.5 * max(x_span, y_span)
 
     if scale < 1e-12:
-        return (0.0, pts[0].copy())
+        return (0.0, points[0].copy())
 
     offset = np.array([(x_max + x_min) * 0.5, (y_max + y_min) * 0.5], dtype=np.float64)
-    pts_norm = (pts - offset) / scale
+    points_norm = (points - offset) / scale
 
-    B = np.empty((m, 3), dtype=pts_norm.dtype)
-    B[:, :2] = pts_norm
+    B = np.empty((num_pts, 3), dtype=points_norm.dtype)
+    B[:, :2] = points_norm
     B[:, 2] = 1.0
 
-    d = np.square(pts_norm).sum(axis=1)
+    d = np.square(points_norm).sum(axis=1)
     y, *_ = lstsq(B, d, overwrite_a=True, overwrite_b=True)
 
-    center_norm = 0.5 * y[:2]
-    r_norm = float(np.sqrt(y[2] + np.square(center_norm).sum()))
-    center = center_norm * scale + offset
+    norm_center = 0.5 * y[:2]
+    norm_radius = float(np.sqrt(y[2] + np.square(norm_center).sum()))
+    center = norm_center * scale + offset
 
     if not np.all(np.isfinite(center)):
-        return (0.0, pts[0].copy())
+        return (0.0, points[0].copy())
 
-    r = r_norm * scale
+    radius = norm_radius * scale
 
-    if not np.isfinite(r):
+    if not np.isfinite(radius):
         return (0.0, center)
 
-    return (r, center)
+    return (radius, center)

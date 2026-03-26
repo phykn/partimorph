@@ -2,30 +2,28 @@ import numpy as np
 
 
 def smooth_boundary(
-    pts: np.ndarray,
+    points: np.ndarray,
     perimeter: float,
     alpha_ratio: float = 0.05,
     beta_ratio: float = 0.001,
 ) -> np.ndarray:
-    coords = pts[:-1]
-    n = len(coords)
+    coordinates = points[:-1]
+    num_points = len(coordinates)
 
     alpha = alpha_ratio * perimeter
     beta = beta_ratio * perimeter
-
-    reg_matrix = _regularization_matrix(n, alpha, beta)
-    smoothed = np.linalg.solve(reg_matrix, coords)
-
-    return smoothed
+    regularization_mat = regularization_matrix(num_points, alpha, beta)
+    return np.linalg.solve(regularization_mat, coordinates)
 
 
-def _regularization_matrix(n: int, alpha: float, beta: float) -> np.ndarray:
-    d = alpha * np.array([-2, 1, 0, 0]) + beta * np.array([-6, 4, -1, 0])
+def regularization_matrix(num_points: int, alpha: float, beta: float) -> np.ndarray:
+    coefficients = alpha * np.array([-2, 1, 0, 0]) + beta * np.array([-6, 4, -1, 0])
 
-    D = np.fromfunction(
-        lambda i, j: np.minimum((i - j) % n, (j - i) % n), (n, n), dtype=int
+    distance_matrix = np.fromfunction(
+        lambda i, j: np.minimum((i - j) % num_points, (j - i) % num_points),
+        (num_points, num_points),
+        dtype=int,
     )
 
-    A = d[np.minimum(D, len(d) - 1)]
-
-    return np.eye(n) - A
+    A = coefficients[np.minimum(distance_matrix, len(coefficients) - 1)]
+    return np.eye(num_points) - A

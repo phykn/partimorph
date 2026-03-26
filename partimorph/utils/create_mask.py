@@ -1,4 +1,5 @@
 import numpy as np
+
 from .geometry import create_poly_mask, polar_vertices
 
 
@@ -31,19 +32,18 @@ def create_ellipse_mask(
 def create_rectangle_mask(
     shape: tuple[int, int], top_left: tuple[int, int], bottom_right: tuple[int, int]
 ) -> np.ndarray:
-    res = np.zeros(shape, dtype=bool)
-
     h, w = shape
     y1, x1 = top_left
     y2, x2 = bottom_right
 
     if y1 >= y2 or x1 >= x2:
         raise ValueError("top_left must be strictly above-left of bottom_right.")
+
     if y1 < 0 or x1 < 0 or y2 > h or x2 > w:
         raise ValueError("rectangle coordinates must be within mask bounds.")
 
+    res = np.zeros(shape, dtype=bool)
     res[y1:y2, x1:x2] = True
-
     return res
 
 
@@ -67,16 +67,17 @@ def create_triangle_mask(
     v3: tuple[int, int],
 ) -> np.ndarray:
     vertices = np.array([v1, v2, v3])
-
     return create_poly_mask(shape, vertices).astype(bool)
 
 
 def create_pentagon_mask(
     shape: tuple[int, int], center: tuple[int, int], radius: float
 ) -> np.ndarray:
+    if radius <= 0:
+        raise ValueError("radius must be > 0.")
+
     angles = np.linspace(0, 2 * np.pi, 6)[:-1] - np.pi / 2
     vertices = polar_vertices(center=center, radii=radius, angles=angles)
-
     return create_poly_mask(shape, vertices).astype(bool)
 
 
@@ -101,5 +102,4 @@ def create_star_mask(
     radii[1::2] = inner_radius
 
     vertices = polar_vertices(center=center, radii=radii, angles=angles)
-
     return create_poly_mask(shape, vertices).astype(bool)

@@ -11,7 +11,7 @@ PartiMorph is a binary-mask-based particle morphology analysis library. It provi
 
 - Single entry point: `analyze_mask(mask)`
 - Built-in preprocessing: Largest Connected Component + hole filling
-- Synthetic particle generation: `create_fourier_particle_mask(...)`
+- Synthetic particle generation: `create_particle_mask(...)`
 - Visualization utility: `plot_analysis_results(...)`
 
 ## Coordinate Convention
@@ -32,12 +32,12 @@ pip install -e .
 ```python
 import partimorph as pm
 
-mask, info = pm.utils.create_fourier_particle_mask(
+mask, info = pm.utils.create_particle_mask(
     shape=(512, 512),
     center=(256, 256),  # (y, x)
+    radius=100,
     sphericity=0.75,
     roundness=0.80,
-    base_radius=100,
     return_info=True,
 )
 
@@ -64,23 +64,25 @@ analyze_mask(
     use_sphericity=True,
     roundness_params=None,
     eps=0.001,
+    target_dim=384,
 )
 ```
+
+Adaptive downscaling is automatically applied if the input mask dimension exceeds `target_dim` (default 384) to optimize performance for heavy metrics like roundness.
 
 ### Input Contract (Strict)
 
 - `mask` must be a 2D `numpy.ndarray`.
 - Allowed values are only `bool` or `{0, 1}`.
-- If a float mask contains `NaN`/`inf`, a `ValueError` is raised.
-- Internally, the mask is normalized to `uint8` binary (`0/1`).
+- Internally, the mask is normalized via `to_binary()`.
 
 ### Return Rules
 
-- Returns `None` for an empty mask
-- Returns a result `dict` otherwise
-- Metrics with `use_* = False` are omitted from the result keys
+- Returns `None` for an empty mask.
+- Returns a result `dict` (see Schema below) otherwise.
+- Metrics with `use_* = False` are omitted from the result keys.
 
-## Result Schema
+## Result Schema (from `partimorph/schema.py`)
 
 ```python
 {
@@ -110,34 +112,35 @@ analyze_mask(
 ## Fourier Synthetic Mask Generation
 
 ```python
-pm.utils.create_fourier_particle_mask(
+pm.utils.create_particle_mask(
     shape,
     center,
+    radius,
     sphericity,
     roundness,
-    base_radius,
+    *,
+    num_angles=256,
     frequencies=None,
     decay=1.0,
-    num_angles=256,
+    seed=None,
     max_iter=20,
     amp_max=0.45,
     metric_tol=0.001,
     report_tol=0.1,
-    seed=None,
     return_info=False,
 )
 ```
 
-Parameter notes:
-- `metric_tol`: Internal search precision
-- `report_tol`: Tolerance used only to compute `target_met` in the report
+- Iteratively searches for the amplitude that achieves the target `roundness`.
+- `metric_tol`: Precision for the internal optimization loop.
+- `report_tol`: Tolerance for setting the `target_met` flag in metadata.
 
 ## Metric Definitions
 
-- Roundness: Wadell roundness based on corner curvature
-- Circularity: `4πA / P²`
-- Sphericity: `R_inscribed / R_enclosing`
-- Aspect Ratio: `major / minor` (always `>= 1`)
+- **Roundness**: Wadell roundness based on corner curvature (via Moore-Neighbor tracing).
+- **Circularity**: ISO circularity defined as `4πA / P²`.
+- **Sphericity**: Riley projection sphericity defined as `R_inscribed / R_enclosing`.
+- **Aspect Ratio**: Ratio of major to minor axis of the fitted ellipse (`major / minor`).
 
 ## References
 

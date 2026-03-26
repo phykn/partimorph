@@ -1,9 +1,17 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "partimorph"
 version = "0.1.0"
-description = "A high-performance Python library for comprehensive particle shape analysis and visualization."
+authors = [
+    { name = "PartiMorph Contributors" }
+]
+description = "Particle shape analysis and visualization library."
 readme = "README.md"
 requires-python = ">=3.12"
+license = { text = "MIT" }
 dependencies = [
     "numpy",
     "scipy",
@@ -12,6 +20,12 @@ dependencies = [
     "matplotlib",
 ]
 
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["partimorph*"]

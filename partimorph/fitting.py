@@ -1,25 +1,7 @@
 import cv2
 import numpy as np
-from scipy import ndimage
-from typing import TypedDict
+from .schema import CircleData, EllipseData
 from .misc import crop_mask, get_contours
-
-
-class CircleData(TypedDict):
-    x: int
-    y: int
-    r: float
-
-
-class EllipseData(TypedDict):
-    major: float
-    minor: float
-    x: float
-    y: float
-    angle: float
-    w: float
-    h: float
-    bbox: list[list[float]]
 
 
 def find_inscribed_circle(mask: np.ndarray) -> CircleData | None:
@@ -28,16 +10,18 @@ def find_inscribed_circle(mask: np.ndarray) -> CircleData | None:
     if cropped_mask.size == 0:
         return None
 
-    dist = ndimage.distance_transform_edt(cropped_mask.astype(bool))
+    distance_transform = cv2.distanceTransform(
+        cropped_mask.astype(np.uint8), cv2.DIST_L2, cv2.DIST_MASK_PRECISE
+    )
 
-    idx = np.argmax(dist)
-    cy_crop, cx_crop = np.unravel_index(idx, dist.shape)
+    max_idx = np.argmax(distance_transform)
+    crop_center_y, crop_center_x = np.unravel_index(max_idx, distance_transform.shape)
 
-    x = int(cx_crop) + pad_x0
-    y = int(cy_crop) + pad_y0
-    r = float(dist[cy_crop, cx_crop])
+    center_x = int(crop_center_x) + pad_x0
+    center_y = int(crop_center_y) + pad_y0
+    radius = float(distance_transform[crop_center_y, crop_center_x])
 
-    return {"x": x, "y": y, "r": r}
+    return {"x": center_x, "y": center_y, "r": radius}
 
 
 def find_enclosing_circle(mask: np.ndarray) -> CircleData | None:
@@ -45,18 +29,17 @@ def find_enclosing_circle(mask: np.ndarray) -> CircleData | None:
         return None
 
     contours = get_contours(mask)
-
     if not contours:
         return None
 
-    pts = np.concatenate(contours)
-    hull = cv2.convexHull(pts)
+    points = np.concatenate(contours)
+    hull = cv2.convexHull(points)
 
-    (cx, cy), r = cv2.minEnclosingCircle(hull)
+    (center_x, center_y), radius = cv2.minEnclosingCircle(hull)
 
-    x = int(round(cx))
-    y = int(round(cy))
-    r = float(r)
+    x = int(round(center_x))
+    y = int(round(center_y))
+    r = float(radius)
 
     return {"x": x, "y": y, "r": r}
 
@@ -66,76 +49,76 @@ def fit_ellipse(mask: np.ndarray) -> EllipseData | None:
     if not contours:
         return None
 
-    pts = np.concatenate(contours).astype(np.float32)
-    if len(pts) < 5:
-        rect = cv2.minAreaRect(pts)
-        (cx, cy), (w, h), angle = rect
+    points = np.concatenate(contours).astype(np.float32)
+    if len(points) < 5:
+        rect = cv2.minAreaRect(points)
+        (center_x, center_y), (width, height), angle = rect
 
-        if w <= 1e-06 or h <= 1e-06:
+        if width <= 1e-06 or height <= 1e-06:
             return None
 
         box = cv2.boxPoints(rect)
         bbox = [[float(x), float(y)] for x, y in box]
 
         return {
-            "major": float(max(w, h)),
-            "minor": float(min(w, h)),
-            "x": float(cx),
-            "y": float(cy),
+            "major": float(max(width, height)),
+            "minor": float(min(width, height)),
+            "x": float(center_x),
+            "y": float(center_y),
             "angle": float(angle),
-            "w": float(w),
-            "h": float(h),
+            "w": float(width),
+            "h": float(height),
             "bbox": bbox,
         }
 
-    _, _, angle = cv2.fitEllipse(pts)
-    rad = np.deg2rad(angle)
-    cos_a, sin_a = (np.cos(rad), np.sin(rad))
+    _, _, angle = cv2.fitEllipse(points)
+    radians = np.deg2rad(angle)
+    cos_a, sin_a = (np.cos(radians), np.sin(radians))
 
-    vec_w = np.array([cos_a, sin_a])
-    vec_h = np.array([-sin_a, cos_a])
+    width_vector = np.array([cos_a, sin_a])
+    height_vector = np.array([-sin_a, cos_a])
 
-    proj_w = pts @ vec_w
-    proj_h = pts @ vec_h
+    width_projection = points @ width_vector
+    height_projection = points @ height_vector
 
-    min_w, max_w = (proj_w.min(), proj_w.max())
-    min_h, max_h = (proj_h.min(), proj_h.max())
+    min_width, max_width = (width_projection.min(), width_projection.max())
+    min_height, max_height = (height_projection.min(), height_projection.max())
 
-    w_tight = max_w - min_w
-    h_tight = max_h - min_h
+    tight_width = max_width - min_width
+    tight_height = max_height - min_height
 
-    mid_w = (max_w + min_w) / 2.0
-    mid_h = (max_h + min_h) / 2.0
+    mid_width = (max_width + min_width) / 2.0
+    mid_height = (max_height + min_height) / 2.0
 
-    cx = mid_w * vec_w[0] + mid_h * vec_h[0]
-    cy = mid_w * vec_w[1] + mid_h * vec_h[1]
+    center_x = mid_width * width_vector[0] + mid_height * height_vector[0]
+    center_y = mid_width * width_vector[1] + mid_height * height_vector[1]
 
     bbox = [
         [
-            float(min_w * vec_w[0] + min_h * vec_h[0]),
-            float(min_w * vec_w[1] + min_h * vec_h[1]),
+            float(min_width * width_vector[0] + min_height * height_vector[0]),
+            float(min_width * width_vector[1] + min_height * height_vector[1]),
         ],
         [
-            float(max_w * vec_w[0] + min_h * vec_h[0]),
-            float(max_w * vec_w[1] + min_h * vec_h[1]),
+            float(max_width * width_vector[0] + min_height * height_vector[0]),
+            float(max_width * width_vector[1] + min_height * height_vector[1]),
         ],
         [
-            float(max_w * vec_w[0] + max_h * vec_h[0]),
-            float(max_w * vec_w[1] + max_h * vec_h[1]),
+            float(max_width * width_vector[0] + max_height * height_vector[0]),
+            float(max_width * width_vector[1] + max_height * height_vector[1]),
         ],
         [
-            float(min_w * vec_w[0] + max_h * vec_h[0]),
-            float(min_w * vec_w[1] + max_h * vec_h[1]),
+            float(min_width * width_vector[0] + max_height * height_vector[0]),
+            float(min_width * width_vector[1] + max_height * height_vector[1]),
         ],
     ]
 
     return {
-        "major": float(max(w_tight, h_tight)),
-        "minor": float(min(w_tight, h_tight)),
-        "x": float(cx),
-        "y": float(cy),
+        "major": float(max(tight_width, tight_height)),
+        "minor": float(min(tight_width, tight_height)),
+        "x": float(center_x),
+        "y": float(center_y),
         "angle": float(angle),
-        "w": float(w_tight),
-        "h": float(h_tight),
+        "w": float(tight_width),
+        "h": float(tight_height),
         "bbox": bbox,
     }
