@@ -38,8 +38,8 @@ def find_inscribed_circle(mask: np.ndarray) -> CircleData | None:
     max_idx = np.argmax(distance_transform)
     crop_center_y, crop_center_x = np.unravel_index(max_idx, distance_transform.shape)
 
-    center_x = int(crop_center_x) + pad_x0
-    center_y = int(crop_center_y) + pad_y0
+    center_x = float(int(crop_center_x) + pad_x0)
+    center_y = float(int(crop_center_y) + pad_y0)
     radius = float(distance_transform[crop_center_y, crop_center_x])
 
     return {"x": center_x, "y": center_y, "r": radius}
@@ -58,8 +58,8 @@ def find_enclosing_circle(mask: np.ndarray) -> CircleData | None:
 
     (center_x, center_y), radius = cv2.minEnclosingCircle(hull)
 
-    x = int(round(center_x))
-    y = int(round(center_y))
+    x = float(center_x)
+    y = float(center_y)
     r = float(radius)
 
     return {"x": x, "y": y, "r": r}

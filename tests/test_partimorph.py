@@ -117,6 +117,8 @@ def test_analyze_mask_uses_largest_component():
     assert results["sphericity"] is not None
 
     center = results["sphericity"]["inscribed"]
+    assert isinstance(center["x"], float)
+    assert isinstance(center["y"], float)
     assert abs(center["x"] - 80) < 5
     assert abs(center["y"] - 80) < 5
 
