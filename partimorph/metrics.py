@@ -10,9 +10,7 @@ from .misc import crop_mask
 from .validation import to_binary
 from .schema import (
     AspectRatioResult,
-    CircleData,
     CircularityResult,
-    EllipseData,
     RoundnessResult,
     SphericityResult,
 )

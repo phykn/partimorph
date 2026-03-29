@@ -7,11 +7,11 @@ def create_poly_mask(
     vertices: np.ndarray,
     dtype: np.dtype = np.uint8,
 ) -> np.ndarray:
-    res = np.zeros(shape, dtype=dtype)
-    pts = vertices.astype(np.int32).reshape((-1, 1, 2))
+    mask = np.zeros(shape, dtype=dtype)
+    pts = np.asarray(vertices, dtype=np.int32).reshape(-1, 1, 2)
 
-    cv2.fillPoly(res, [pts], 1)
-    return res
+    cv2.fillPoly(mask, [pts], 1)
+    return mask
 
 
 def polar_vertices(

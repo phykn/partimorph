@@ -15,13 +15,8 @@ def get_contours(mask: np.ndarray) -> tuple[np.ndarray, ...]:
         cropped_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
     )
 
-    shifted_contours = []
-
-    for contour in contours:
-        contour_shifted = contour + [offset_x, offset_y]
-        shifted_contours.append(contour_shifted)
-
-    return tuple(shifted_contours)
+    offset = np.array([[[offset_x, offset_y]]], dtype=np.int32)
+    return tuple(contour + offset for contour in contours)
 
 
 def crop_mask(mask: np.ndarray, pad: int = 1) -> tuple[np.ndarray, int, int]:

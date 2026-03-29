@@ -29,7 +29,7 @@ def extract_boundary(mask: np.ndarray) -> np.ndarray:
     return boundary_xy
 
 
-def moore_neighborhood(current: np.ndarray, backtrack: np.ndarray) -> np.ndarray | int:
+def moore_neighborhood(current: np.ndarray, backtrack: np.ndarray) -> np.ndarray | None:
     operations = np.array(
         [[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1]]
     )
@@ -39,7 +39,7 @@ def moore_neighborhood(current: np.ndarray, backtrack: np.ndarray) -> np.ndarray
         if np.all(point == backtrack):
             return np.concatenate((neighbors[i:], neighbors[:i]))
 
-    return 0
+    return None
 
 
 def boundary_tracing(region) -> np.ndarray:
@@ -49,7 +49,7 @@ def boundary_tracing(region) -> np.ndarray:
     binary = np.zeros((max_coords[0] + 2, max_coords[1] + 2), dtype=np.uint8)
     x = coords[:, 1]
     y = coords[:, 0]
-    binary[tuple([y, x])] = 1
+    binary[y, x] = 1
 
     start_index = 0
 
@@ -76,12 +76,12 @@ def boundary_tracing(region) -> np.ndarray:
     while True:
         neighbors = moore_neighborhood(current, backtrack)
 
-        if isinstance(neighbors, int):
+        if neighbors is None:
             return np.empty((0, 2), dtype=np.int64)
 
         neighbor_y = neighbors[:, 0]
         neighbor_x = neighbors[:, 1]
-        idx = int(np.argmax(binary[tuple([neighbor_y, neighbor_x])]))
+        idx = int(np.argmax(binary[neighbor_y, neighbor_x]))
 
         boundary.append(current.copy())
         backtrack = neighbors[idx - 1]

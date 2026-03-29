@@ -3,6 +3,30 @@ from ..metrics import compute_roundness
 from .geometry import create_poly_mask, polar_vertices
 
 
+def _build_info(
+    *,
+    sphericity: float,
+    roundness: float,
+    achieved: float,
+    report_tol: float,
+    amplitude: float,
+    frequencies: np.ndarray,
+    phases: np.ndarray,
+) -> dict:
+    abs_error = abs(roundness - achieved)
+    return {
+        "sphericity_target": sphericity,
+        "roundness_target": roundness,
+        "roundness_achieved": achieved,
+        "abs_error": abs_error,
+        "report_tol": report_tol,
+        "target_met": abs_error <= report_tol,
+        "amplitude": amplitude,
+        "frequencies": frequencies.tolist(),
+        "phases": phases.tolist(),
+    }
+
+
 def ellipse_radius(
     a: float, b: float, cos_t: np.ndarray, sin_t: np.ndarray
 ) -> np.ndarray:
@@ -64,7 +88,6 @@ def create_particle_mask(
     Returns:
         The binary mask as a numpy array, or a tuple of (mask, info_dict).
     """
-    # 1. Parameter preprocessing
     sphericity = np.clip(sphericity, 0.001, 1.0)
     roundness = np.clip(roundness, 0.0, 1.0)
     radius = float(radius)
@@ -74,39 +97,36 @@ def create_particle_mask(
     if num_angles < 3:
         raise ValueError("Invalid angles")
 
-    # 2. Setup frequencies and phases
-    freqs = np.array(
+    frequencies_arr = np.asarray(
         frequencies if frequencies is not None else np.arange(2, 9), dtype=int
     )
-    phases = np.random.default_rng(seed).uniform(0.0, 2.0 * np.pi, size=len(freqs))
+    phases = np.random.default_rng(seed).uniform(
+        0.0, 2.0 * np.pi, size=len(frequencies_arr)
+    )
     cy, cx = center
 
-    # 3. Handle zero radius edge case
     if radius == 0.0:
         mask = np.zeros(shape, dtype=bool)
         iy, ix = int(round(cy)), int(round(cx))
         if 0 <= iy < shape[0] and 0 <= ix < shape[1]:
             mask[iy, ix] = True
 
-        info = {
-            "sphericity_target": sphericity,
-            "roundness_target": roundness,
-            "roundness_achieved": 0.0,
-            "abs_error": abs(roundness),
-            "report_tol": report_tol,
-            "target_met": abs(roundness) <= report_tol,
-            "amplitude": 0.0,
-            "frequencies": freqs.tolist(),
-            "phases": phases.tolist(),
-        }
+        info = _build_info(
+            sphericity=sphericity,
+            roundness=roundness,
+            achieved=0.0,
+            report_tol=report_tol,
+            amplitude=0.0,
+            frequencies=frequencies_arr,
+            phases=phases,
+        )
         return (mask, info) if return_info else mask
 
-    # 4. Calibration loop (at lower resolution)
     thetas_sim = np.linspace(0.0, 2.0 * np.pi, 128, endpoint=False)
     base_sim = ellipse_radius(
         radius, radius * sphericity, np.cos(thetas_sim), np.sin(thetas_sim)
     )
-    noise_sim = roughness_signal(thetas_sim, freqs, phases, decay) * radius
+    noise_sim = roughness_signal(thetas_sim, frequencies_arr, phases, decay) * radius
     scale = min(1.0, 128.0 / radius)
 
     size_sim = int(np.ceil((radius * scale * (1.0 + amp_max) + 2) * 2))
@@ -135,12 +155,11 @@ def create_particle_mask(
             else:
                 high = mid
 
-    # 5. Final mask generation
     thetas = np.linspace(0.0, 2.0 * np.pi, num_angles, endpoint=False)
     rs_base = ellipse_radius(
         radius, radius * sphericity, np.cos(thetas), np.sin(thetas)
     )
-    rs_noise = roughness_signal(thetas, freqs, phases, decay) * radius
+    rs_noise = roughness_signal(thetas, frequencies_arr, phases, decay) * radius
     rs_final = np.maximum(rs_base + amp * rs_noise, 0.5)
 
     vs = polar_vertices((cy, cx), rs_final, thetas)
@@ -149,15 +168,13 @@ def create_particle_mask(
     if not return_info:
         return mask
 
-    info = {
-        "sphericity_target": sphericity,
-        "roundness_target": roundness,
-        "roundness_achieved": val,
-        "abs_error": abs(roundness - val),
-        "report_tol": report_tol,
-        "target_met": abs(roundness - val) <= report_tol,
-        "amplitude": amp,
-        "frequencies": freqs.tolist(),
-        "phases": phases.tolist(),
-    }
+    info = _build_info(
+        sphericity=sphericity,
+        roundness=roundness,
+        achieved=val,
+        report_tol=report_tol,
+        amplitude=amp,
+        frequencies=frequencies_arr,
+        phases=phases,
+    )
     return mask, info

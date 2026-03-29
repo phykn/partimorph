@@ -4,6 +4,38 @@ from typing import Any, Mapping
 from matplotlib.patches import Circle, Ellipse, Polygon
 
 
+def _add_circle_overlay(ax, circle_data: Mapping[str, float], *, color: str, label: str, marker: str) -> None:
+    x = circle_data["x"]
+    y = circle_data["y"]
+    r = circle_data["r"]
+    ax.add_patch(Circle((x, y), r, color=color, fill=False, label=label))
+    ax.scatter(x, y, color=color, marker=marker)
+
+
+def _add_ellipse_overlay(ax, ellipse: Mapping[str, Any]) -> None:
+    ax.add_patch(
+        Ellipse(
+            (ellipse["x"], ellipse["y"]),
+            ellipse["w"],
+            ellipse["h"],
+            angle=-ellipse["angle"],
+            color="yellow",
+            fill=False,
+            label="Fitted Ellipse",
+        )
+    )
+    if ellipse.get("bbox"):
+        ax.add_patch(
+            Polygon(
+                ellipse["bbox"],
+                closed=True,
+                color="green",
+                fill=False,
+                label="Bounding Box",
+            )
+        )
+
+
 def plot_analysis_results(
     mask: np.ndarray,
     results: Mapping[str, Any],
@@ -16,55 +48,26 @@ def plot_analysis_results(
 
     sphericity_data = results.get("sphericity")
     if sphericity_data:
-        inscribed = sphericity_data["inscribed"]
-        ax.add_patch(
-            Circle(
-                (inscribed["x"], inscribed["y"]),
-                inscribed["r"],
-                color="blue",
-                fill=False,
-                label="Inscribed",
-            )
+        _add_circle_overlay(
+            ax,
+            sphericity_data["inscribed"],
+            color="blue",
+            label="Inscribed",
+            marker="+",
         )
-        ax.scatter(inscribed["x"], inscribed["y"], color="blue", marker="+")
-
-        enclosing = sphericity_data["enclosing"]
-        ax.add_patch(
-            Circle(
-                (enclosing["x"], enclosing["y"]),
-                enclosing["r"],
-                color="red",
-                fill=False,
-                label="Enclosing",
-            )
+        _add_circle_overlay(
+            ax,
+            sphericity_data["enclosing"],
+            color="red",
+            label="Enclosing",
+            marker="x",
         )
-        ax.scatter(enclosing["x"], enclosing["y"], color="red", marker="x")
 
     aspect_ratio_data = results.get("aspect_ratio")
     if aspect_ratio_data:
         ellipse = aspect_ratio_data.get("ellipse")
         if ellipse:
-            ax.add_patch(
-                Ellipse(
-                    (ellipse["x"], ellipse["y"]),
-                    ellipse["w"],
-                    ellipse["h"],
-                    angle=-ellipse["angle"],
-                    color="yellow",
-                    fill=False,
-                    label="Fitted Ellipse",
-                )
-            )
-            if ellipse.get("bbox"):
-                ax.add_patch(
-                    Polygon(
-                        ellipse["bbox"],
-                        closed=True,
-                        color="green",
-                        fill=False,
-                        label="Bounding Box",
-                    )
-                )
+            _add_ellipse_overlay(ax, ellipse)
 
     metric_labels = {
         "roundness": "Roundness",

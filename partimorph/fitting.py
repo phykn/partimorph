@@ -4,6 +4,27 @@ from .schema import CircleData, EllipseData
 from .misc import crop_mask, get_contours
 
 
+def _ellipse_payload(
+    *,
+    center_x: float,
+    center_y: float,
+    angle: float,
+    width: float,
+    height: float,
+    bbox: list[list[float]],
+) -> EllipseData:
+    return {
+        "major": float(max(width, height)),
+        "minor": float(min(width, height)),
+        "x": float(center_x),
+        "y": float(center_y),
+        "angle": float(angle),
+        "w": float(width),
+        "h": float(height),
+        "bbox": bbox,
+    }
+
+
 def find_inscribed_circle(mask: np.ndarray) -> CircleData | None:
     cropped_mask, pad_x0, pad_y0 = crop_mask(mask, pad=1)
 
@@ -59,17 +80,14 @@ def fit_ellipse(mask: np.ndarray) -> EllipseData | None:
 
         box = cv2.boxPoints(rect)
         bbox = [[float(x), float(y)] for x, y in box]
-
-        return {
-            "major": float(max(width, height)),
-            "minor": float(min(width, height)),
-            "x": float(center_x),
-            "y": float(center_y),
-            "angle": float(angle),
-            "w": float(width),
-            "h": float(height),
-            "bbox": bbox,
-        }
+        return _ellipse_payload(
+            center_x=center_x,
+            center_y=center_y,
+            angle=angle,
+            width=width,
+            height=height,
+            bbox=bbox,
+        )
 
     _, _, angle = cv2.fitEllipse(points)
     radians = np.deg2rad(angle)
@@ -112,13 +130,11 @@ def fit_ellipse(mask: np.ndarray) -> EllipseData | None:
         ],
     ]
 
-    return {
-        "major": float(max(tight_width, tight_height)),
-        "minor": float(min(tight_width, tight_height)),
-        "x": float(center_x),
-        "y": float(center_y),
-        "angle": float(angle),
-        "w": float(tight_width),
-        "h": float(tight_height),
-        "bbox": bbox,
-    }
+    return _ellipse_payload(
+        center_x=center_x,
+        center_y=center_y,
+        angle=angle,
+        width=tight_width,
+        height=tight_height,
+        bbox=bbox,
+    )

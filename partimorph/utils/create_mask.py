@@ -3,6 +3,10 @@ import numpy as np
 from .geometry import create_poly_mask, polar_vertices
 
 
+def _polygon_mask(shape: tuple[int, int], vertices: np.ndarray) -> np.ndarray:
+    return create_poly_mask(shape, vertices).astype(bool)
+
+
 def create_circle_mask(
     shape: tuple[int, int], center: tuple[int, int], radius: float
 ) -> np.ndarray:
@@ -67,7 +71,7 @@ def create_triangle_mask(
     v3: tuple[int, int],
 ) -> np.ndarray:
     vertices = np.array([v1, v2, v3])
-    return create_poly_mask(shape, vertices).astype(bool)
+    return _polygon_mask(shape, vertices)
 
 
 def create_pentagon_mask(
@@ -76,9 +80,9 @@ def create_pentagon_mask(
     if radius <= 0:
         raise ValueError("radius must be > 0.")
 
-    angles = np.linspace(0, 2 * np.pi, 6)[:-1] - np.pi / 2
+    angles = np.linspace(0, 2 * np.pi, 5, endpoint=False) - np.pi / 2
     vertices = polar_vertices(center=center, radii=radius, angles=angles)
-    return create_poly_mask(shape, vertices).astype(bool)
+    return _polygon_mask(shape, vertices)
 
 
 def create_star_mask(
@@ -97,9 +101,9 @@ def create_star_mask(
     if num_points < 2:
         raise ValueError("num_points must be >= 2.")
 
-    angles = np.linspace(0, 2 * np.pi, 2 * num_points + 1)[:-1] - np.pi / 2
+    angles = np.linspace(0, 2 * np.pi, 2 * num_points, endpoint=False) - np.pi / 2
     radii = np.ones_like(angles) * outer_radius
     radii[1::2] = inner_radius
 
     vertices = polar_vertices(center=center, radii=radii, angles=angles)
-    return create_poly_mask(shape, vertices).astype(bool)
+    return _polygon_mask(shape, vertices)

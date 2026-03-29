@@ -94,3 +94,44 @@ def test_metrics_consistency():
     assert results["circularity"]["val"] > 0.9
     assert results["sphericity"]["val"] > 0.9
     assert results["roundness"]["val"] > 0.9
+
+
+def test_analyze_mask_invalid_params():
+    mask = np.zeros((32, 32), dtype=bool)
+    mask[8:24, 8:24] = True
+
+    with pytest.raises(ValueError, match="eps must be > 0"):
+        pm.analyze_mask(mask, eps=0.0)
+
+    with pytest.raises(ValueError, match="target_dim must be > 0"):
+        pm.analyze_mask(mask, target_dim=0)
+
+
+def test_analyze_mask_uses_largest_component():
+    mask = np.zeros((120, 120), dtype=bool)
+    mask[10:30, 10:30] = True
+    mask[50:110, 50:110] = True
+
+    results = pm.analyze_mask(mask, use_roundness=False, use_circularity=False)
+    assert results is not None
+    assert results["sphericity"] is not None
+
+    center = results["sphericity"]["inscribed"]
+    assert abs(center["x"] - 80) < 5
+    assert abs(center["y"] - 80) < 5
+
+
+def test_analyze_mask_resize_path_scales_coordinates():
+    mask = np.zeros((1000, 1000), dtype=bool)
+    mask[100:900, 200:800] = True
+
+    results = pm.analyze_mask(mask, target_dim=384, use_roundness=False)
+    assert results is not None
+    assert results["sphericity"] is not None
+    assert results["aspect_ratio"] is not None
+
+    inscribed = results["sphericity"]["inscribed"]
+    assert isinstance(inscribed["x"], float)
+    assert isinstance(inscribed["y"], float)
+    assert abs(inscribed["x"] - 500) < 5
+    assert abs(inscribed["y"] - 500) < 110

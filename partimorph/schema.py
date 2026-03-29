@@ -2,8 +2,8 @@ from typing import TypedDict
 
 
 class CircleData(TypedDict):
-    x: int
-    y: int
+    x: float
+    y: float
     r: float
 
 
