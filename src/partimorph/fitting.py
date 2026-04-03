@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from .schema import CircleData, EllipseData
+from .schema import CircleData, EllipseData, Mask, Points
 from .misc import crop_mask, get_contours
 
 
@@ -25,7 +25,7 @@ def _ellipse_payload(
     }
 
 
-def find_inscribed_circle(mask: np.ndarray) -> CircleData | None:
+def find_inscribed_circle(mask: Mask) -> CircleData | None:
     cropped_mask, pad_x0, pad_y0 = crop_mask(mask, pad=1)
 
     if cropped_mask.size == 0:
@@ -45,7 +45,7 @@ def find_inscribed_circle(mask: np.ndarray) -> CircleData | None:
     return {"x": center_x, "y": center_y, "r": radius}
 
 
-def find_enclosing_circle(mask: np.ndarray) -> CircleData | None:
+def find_enclosing_circle(mask: Mask) -> CircleData | None:
     if not np.any(mask):
         return None
 
@@ -65,12 +65,12 @@ def find_enclosing_circle(mask: np.ndarray) -> CircleData | None:
     return {"x": x, "y": y, "r": r}
 
 
-def fit_ellipse(mask: np.ndarray) -> EllipseData | None:
+def fit_ellipse(mask: Mask) -> EllipseData | None:
     contours = get_contours(mask)
     if not contours:
         return None
 
-    points = np.concatenate(contours).astype(np.float32)
+    points: Points = np.concatenate(contours).astype(np.float32)
     if len(points) < 5:
         rect = cv2.minAreaRect(points)
         (center_x, center_y), (width, height), angle = rect

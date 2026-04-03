@@ -1,4 +1,12 @@
-from typing import TypedDict
+import numpy as np
+from typing import Annotated, TypeAlias, TypedDict
+
+
+Bbox: TypeAlias = list[list[float]]
+Mask: TypeAlias = Annotated[np.ndarray, "shape=(H, W), dtype=uint8"]
+Coordinates: TypeAlias = Annotated[np.ndarray, "shape=(N, 2), dtype=float64"]
+Boundary: TypeAlias = Annotated[np.ndarray, "shape=(N, 2), dtype=int32"]
+Points: TypeAlias = Annotated[np.ndarray, "shape=(N, 2), dtype=float32"]
 
 
 class CircleData(TypedDict):
@@ -15,7 +23,7 @@ class EllipseData(TypedDict):
     angle: float
     w: float
     h: float
-    bbox: list[list[float]]
+    bbox: Bbox
 
 
 class RoundnessResult(TypedDict):

@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from scipy import ndimage
-from .schema import AnalysisResult
+from .schema import AnalysisResult, Mask
 from .metrics import (
     compute_aspect_ratio,
     compute_circularity,
@@ -11,7 +11,7 @@ from .metrics import (
 from .validation import to_binary
 
 
-def _preprocess_mask(mask: np.ndarray, target_dim: int) -> tuple[np.ndarray, bool]:
+def _preprocess_mask(mask: Mask, target_dim: int) -> tuple[Mask, bool]:
     height, width = mask.shape[:2]
     max_dimension = max(height, width)
     is_resized = max_dimension > target_dim

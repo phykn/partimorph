@@ -6,6 +6,7 @@ from .corner import compute_corner_circles
 from .discretize import classify_concave_convex, discretize_boundary
 from .smoothing import smooth_boundary
 from ..misc import crop_mask
+from ..schema import Mask, Points
 
 
 def compute_roundness(
@@ -19,11 +20,14 @@ def compute_roundness(
     if mask.dtype != np.uint8:
         mask = mask.astype(np.uint8)
 
-    mask, _, _ = crop_mask(mask, pad=1)
-    if mask.size == 0:
+    mask_uint8: Mask = mask
+    mask_cropped, _, _ = crop_mask(mask_uint8, pad=1)
+    if mask_cropped.size == 0:
         return None
 
-    distance_transform = cv2.distanceTransform(mask, cv2.DIST_L2, cv2.DIST_MASK_PRECISE)
+    distance_transform = cv2.distanceTransform(
+        mask_cropped, cv2.DIST_L2, cv2.DIST_MASK_PRECISE
+    )
     max_radius = float(np.max(distance_transform))
     if max_radius < 1e-6:
         return None
@@ -32,7 +36,7 @@ def compute_roundness(
     peak_y, peak_x = np.unravel_index(max_idx, distance_transform.shape)
     max_radius_pos = np.array([float(peak_x), float(peak_y)])
 
-    boundary = extract_boundary(mask)
+    boundary = extract_boundary(mask_cropped)
     if len(boundary) < 4:
         return None
 
@@ -57,8 +61,14 @@ def compute_roundness(
     if len(convex_points) < 2:
         return None
 
+    convex_points_typed: Points = convex_points.astype(np.float32)
+
     radii, _ = compute_corner_circles(
-        convex_points, keypoints, max_radius, max_radius_pos, circle_fit_thresh
+        convex_points_typed,
+        keypoints.astype(np.float32),
+        max_radius,
+        max_radius_pos,
+        circle_fit_thresh,
     )
     if len(radii) == 0:
         return None

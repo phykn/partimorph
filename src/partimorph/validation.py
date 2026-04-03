@@ -1,7 +1,8 @@
 import numpy as np
+from .schema import Mask
 
 
-def to_binary(mask: np.ndarray) -> np.ndarray:
+def to_binary(mask: np.ndarray) -> Mask:
     if not isinstance(mask, np.ndarray):
         raise TypeError("mask must be a numpy.ndarray.")
 
