@@ -4,7 +4,9 @@ from typing import Any, Mapping
 from matplotlib.patches import Circle, Ellipse, Polygon
 
 
-def _add_circle_overlay(ax, circle_data: Mapping[str, float], *, color: str, label: str, marker: str) -> None:
+def _add_circle_overlay(
+    ax, circle_data: Mapping[str, float], *, color: str, label: str, marker: str
+) -> None:
     x = circle_data["x"]
     y = circle_data["y"]
     r = circle_data["r"]
@@ -41,6 +43,7 @@ def plot_analysis_results(
     results: Mapping[str, Any],
     figsize: tuple[int, int] = (8, 8),
     title: str = "Analysis Results",
+    show: bool = True,
 ) -> None:
 
     fig, ax = plt.subplots(figsize=figsize)
@@ -90,4 +93,5 @@ def plot_analysis_results(
 
     ax.grid(True, linestyle="--", alpha=0.5)
     plt.tight_layout()
-    plt.show()
+    if show:
+        plt.show()

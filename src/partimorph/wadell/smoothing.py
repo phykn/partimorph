@@ -13,7 +13,8 @@ def smooth_boundary(
     alpha = alpha_ratio * perimeter
     beta = beta_ratio * perimeter
     regularization_mat = regularization_matrix(num_points, alpha, beta)
-    return np.linalg.solve(regularization_mat, coordinates)
+    result, *_ = np.linalg.lstsq(regularization_mat, coordinates, rcond=None)
+    return result
 
 
 def regularization_matrix(num_points: int, alpha: float, beta: float) -> np.ndarray:
