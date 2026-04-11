@@ -7,7 +7,6 @@ from .fitting import (
 )
 from .wadell import compute_roundness as compute_roundness_wadell
 from .misc import crop_mask
-from .validation import to_binary
 from .schema import (
     AspectRatioResult,
     CircularityResult,
@@ -18,17 +17,15 @@ from .schema import (
 
 
 def compute_roundness(
-    mask: np.ndarray,
+    mask: Mask,
     *,
     max_dev_thresh: float = 0.3,
     circle_fit_thresh: float = 0.98,
     alpha_ratio: float = 0.05,
     beta_ratio: float = 0.001,
 ) -> RoundnessResult | None:
-    mask_binary: Mask = to_binary(mask)
-
     value = compute_roundness_wadell(
-        mask_binary,
+        mask,
         max_dev_thresh=max_dev_thresh,
         circle_fit_thresh=circle_fit_thresh,
         alpha_ratio=alpha_ratio,
@@ -44,11 +41,9 @@ def compute_roundness(
 
 
 def compute_circularity(
-    mask: np.ndarray, *, eps: float = 0.001
+    mask: Mask, *, eps: float = 0.001
 ) -> CircularityResult | None:
-    mask_binary: Mask = to_binary(mask)
-
-    cropped_mask, _, _ = crop_mask(mask_binary, pad=1)
+    cropped_mask, _, _ = crop_mask(mask, pad=1)
 
     if cropped_mask.size == 0:
         return None
@@ -58,7 +53,7 @@ def compute_circularity(
     if perimeter < eps:
         return None
 
-    area = float(np.count_nonzero(mask_binary))
+    area = float(np.count_nonzero(mask))
     value = 4.0 * np.pi * area / perimeter**2
     value = float(np.clip(value, 0.0, 1.0))
 
@@ -66,12 +61,10 @@ def compute_circularity(
 
 
 def compute_sphericity(
-    mask: np.ndarray, *, eps: float = 0.001
+    mask: Mask, *, eps: float = 0.001
 ) -> SphericityResult | None:
-    mask_binary: Mask = to_binary(mask)
-
-    inscribed = find_inscribed_circle(mask_binary)
-    enclosing = find_enclosing_circle(mask_binary)
+    inscribed = find_inscribed_circle(mask)
+    enclosing = find_enclosing_circle(mask)
 
     if inscribed is None or enclosing is None:
         return None
@@ -88,11 +81,9 @@ def compute_sphericity(
 
 
 def compute_aspect_ratio(
-    mask: np.ndarray, *, eps: float = 0.001
+    mask: Mask, *, eps: float = 0.001
 ) -> AspectRatioResult | None:
-    mask_binary: Mask = to_binary(mask)
-
-    ellipse_data = fit_ellipse(mask_binary)
+    ellipse_data = fit_ellipse(mask)
 
     if ellipse_data is None:
         return None
