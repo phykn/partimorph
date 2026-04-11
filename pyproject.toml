@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "partimorph"
-version = "0.1.1"
+version = "0.1.2"
 authors = [
     { name = "PartiMorph Contributors" }
 ]
@@ -12,6 +12,11 @@ description = "Particle shape analysis and visualization library."
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }
+
+[project.urls]
+Homepage = "https://github.com/phykn/partimorph"
+Repository = "https://github.com/phykn/partimorph"
+Issues = "https://github.com/phykn/partimorph/issues"
 dependencies = [
     "numpy",
     "scipy",
