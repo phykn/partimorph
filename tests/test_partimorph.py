@@ -137,3 +137,26 @@ def test_analyze_mask_resize_path_scales_coordinates():
     assert isinstance(inscribed["y"], float)
     assert abs(inscribed["x"] - 500) < 5
     assert abs(inscribed["y"] - 500) < 110
+
+    ellipse = results["aspect_ratio"]["ellipse"]
+    assert len(ellipse["bbox"]) == 4
+    for pt in ellipse["bbox"]:
+        assert len(pt) == 2
+        assert isinstance(pt[0], float)
+        assert isinstance(pt[1], float)
+
+
+def test_roundness_rough_particle_golden():
+    mask = pm.utils.create_particle_mask(
+        shape=(256, 256),
+        center=(128, 128),
+        radius=60,
+        sphericity=0.85,
+        roundness=0.5,
+        seed=42,
+    )
+    results = pm.analyze_mask(mask)
+    assert results is not None
+    assert results["roundness"] is not None
+    value = results["roundness"]["val"]
+    assert 0.3 < value < 0.7
