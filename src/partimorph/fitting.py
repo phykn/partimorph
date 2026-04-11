@@ -25,6 +25,52 @@ def _ellipse_payload(
     }
 
 
+def _oriented_bbox_from_angle(
+    points: Points, angle: float
+) -> tuple[float, float, float, float, list[list[float]]]:
+    radians = np.deg2rad(angle)
+    cos_a, sin_a = (np.cos(radians), np.sin(radians))
+
+    width_vector = np.array([cos_a, sin_a])
+    height_vector = np.array([-sin_a, cos_a])
+
+    width_projection = points @ width_vector
+    height_projection = points @ height_vector
+
+    min_width, max_width = (width_projection.min(), width_projection.max())
+    min_height, max_height = (height_projection.min(), height_projection.max())
+
+    tight_width = max_width - min_width
+    tight_height = max_height - min_height
+
+    mid_width = (max_width + min_width) / 2.0
+    mid_height = (max_height + min_height) / 2.0
+
+    center_x = mid_width * width_vector[0] + mid_height * height_vector[0]
+    center_y = mid_width * width_vector[1] + mid_height * height_vector[1]
+
+    bbox = [
+        [
+            float(min_width * width_vector[0] + min_height * height_vector[0]),
+            float(min_width * width_vector[1] + min_height * height_vector[1]),
+        ],
+        [
+            float(max_width * width_vector[0] + min_height * height_vector[0]),
+            float(max_width * width_vector[1] + min_height * height_vector[1]),
+        ],
+        [
+            float(max_width * width_vector[0] + max_height * height_vector[0]),
+            float(max_width * width_vector[1] + max_height * height_vector[1]),
+        ],
+        [
+            float(min_width * width_vector[0] + max_height * height_vector[0]),
+            float(min_width * width_vector[1] + max_height * height_vector[1]),
+        ],
+    ]
+
+    return (float(center_x), float(center_y), float(tight_width), float(tight_height), bbox)
+
+
 def find_inscribed_circle(mask: Mask) -> CircleData | None:
     cropped_mask, pad_x0, pad_y0 = crop_mask(mask, pad=1)
 
@@ -90,45 +136,9 @@ def fit_ellipse(mask: Mask) -> EllipseData | None:
         )
 
     _, _, angle = cv2.fitEllipse(points)
-    radians = np.deg2rad(angle)
-    cos_a, sin_a = (np.cos(radians), np.sin(radians))
-
-    width_vector = np.array([cos_a, sin_a])
-    height_vector = np.array([-sin_a, cos_a])
-
-    width_projection = points @ width_vector
-    height_projection = points @ height_vector
-
-    min_width, max_width = (width_projection.min(), width_projection.max())
-    min_height, max_height = (height_projection.min(), height_projection.max())
-
-    tight_width = max_width - min_width
-    tight_height = max_height - min_height
-
-    mid_width = (max_width + min_width) / 2.0
-    mid_height = (max_height + min_height) / 2.0
-
-    center_x = mid_width * width_vector[0] + mid_height * height_vector[0]
-    center_y = mid_width * width_vector[1] + mid_height * height_vector[1]
-
-    bbox = [
-        [
-            float(min_width * width_vector[0] + min_height * height_vector[0]),
-            float(min_width * width_vector[1] + min_height * height_vector[1]),
-        ],
-        [
-            float(max_width * width_vector[0] + min_height * height_vector[0]),
-            float(max_width * width_vector[1] + min_height * height_vector[1]),
-        ],
-        [
-            float(max_width * width_vector[0] + max_height * height_vector[0]),
-            float(max_width * width_vector[1] + max_height * height_vector[1]),
-        ],
-        [
-            float(min_width * width_vector[0] + max_height * height_vector[0]),
-            float(min_width * width_vector[1] + max_height * height_vector[1]),
-        ],
-    ]
+    center_x, center_y, tight_width, tight_height, bbox = _oriented_bbox_from_angle(
+        points, angle
+    )
 
     return _ellipse_payload(
         center_x=center_x,
