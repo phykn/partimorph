@@ -10,18 +10,13 @@ from ..schema import Mask, Points
 
 
 def compute_roundness(
-    mask: np.ndarray,
+    mask: Mask,
     max_dev_thresh: float = 0.3,
     circle_fit_thresh: float = 0.98,
     alpha_ratio: float = 0.05,
     beta_ratio: float = 0.001,
 ) -> float | None:
-
-    if mask.dtype != np.uint8:
-        mask = mask.astype(np.uint8)
-
-    mask_uint8: Mask = mask
-    mask_cropped, _, _ = crop_mask(mask_uint8, pad=1)
+    mask_cropped, _, _ = crop_mask(mask, pad=1)
     if mask_cropped.size == 0:
         return None
 
