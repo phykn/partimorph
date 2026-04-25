@@ -6,9 +6,6 @@ def extract_boundary(mask: np.ndarray) -> np.ndarray:
     if mask.dtype != np.uint8:
         mask = mask.astype(np.uint8)
 
-    if not np.any(mask):
-        return np.empty((0, 2), dtype=np.float64)
-
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     if not contours:
         return np.empty((0, 2), dtype=np.float64)
