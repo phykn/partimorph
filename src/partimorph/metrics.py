@@ -40,9 +40,7 @@ def compute_roundness(
     return {"val": value}
 
 
-def compute_circularity(
-    mask: Mask, *, eps: float = 0.001
-) -> CircularityResult | None:
+def compute_circularity(mask: Mask, *, eps: float = 0.001) -> CircularityResult | None:
     cropped_mask, _, _ = crop_mask(mask, pad=1)
 
     if cropped_mask.size == 0:
@@ -60,9 +58,7 @@ def compute_circularity(
     return {"val": value}
 
 
-def compute_sphericity(
-    mask: Mask, *, eps: float = 0.001
-) -> SphericityResult | None:
+def compute_sphericity(mask: Mask, *, eps: float = 0.001) -> SphericityResult | None:
     inscribed = find_inscribed_circle(mask)
     enclosing = find_enclosing_circle(mask)
 
@@ -80,9 +76,7 @@ def compute_sphericity(
     return {"val": value, "inscribed": inscribed, "enclosing": enclosing}
 
 
-def compute_aspect_ratio(
-    mask: Mask, *, eps: float = 0.001
-) -> AspectRatioResult | None:
+def compute_aspect_ratio(mask: Mask, *, eps: float = 0.001) -> AspectRatioResult | None:
     ellipse_data = fit_ellipse(mask)
 
     if ellipse_data is None:

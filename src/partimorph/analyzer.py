@@ -60,8 +60,7 @@ def _rescale_results(
         ellipse["w"] = float(ellipse["w"] * scale_x)
         ellipse["h"] = float(ellipse["h"] * scale_y)
         ellipse["bbox"] = [
-            [float(pt[0] * scale_x), float(pt[1] * scale_y)]
-            for pt in ellipse["bbox"]
+            [float(pt[0] * scale_x), float(pt[1] * scale_y)] for pt in ellipse["bbox"]
         ]
 
 
