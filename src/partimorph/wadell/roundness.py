@@ -56,10 +56,10 @@ def compute_roundness(
     if len(convex_points) < 2:
         return None
 
-    convex_points_typed: Points = convex_points.astype(np.float32)
+    convex_points: Points = convex_points.astype(np.float32)
 
     radii, _ = compute_corner_circles(
-        convex_points_typed,
+        convex_points,
         keypoints.astype(np.float32),
         max_radius,
         max_radius_pos,
