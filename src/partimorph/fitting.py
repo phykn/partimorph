@@ -68,7 +68,13 @@ def _oriented_bbox_from_angle(
         ],
     ]
 
-    return (float(center_x), float(center_y), float(tight_width), float(tight_height), bbox)
+    return (
+        float(center_x),
+        float(center_y),
+        float(tight_width),
+        float(tight_height),
+        bbox,
+    )
 
 
 def find_inscribed_circle(mask: Mask) -> CircleData | None:
@@ -92,9 +98,6 @@ def find_inscribed_circle(mask: Mask) -> CircleData | None:
 
 
 def find_enclosing_circle(mask: Mask) -> CircleData | None:
-    if not np.any(mask):
-        return None
-
     contours = get_contours(mask)
     if not contours:
         return None
