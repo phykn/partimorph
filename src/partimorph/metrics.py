@@ -6,7 +6,7 @@ from .fitting import (
     fit_ellipse,
 )
 from .wadell import compute_roundness as compute_roundness_wadell
-from .misc import crop_mask
+from .mask_ops import crop_mask
 from .schema import (
     AspectRatioResult,
     CircularityResult,

@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from .schema import CircleData, EllipseData, Mask, Points
-from .misc import crop_mask, get_contours
+from .mask_ops import crop_mask, get_contours
 
 
 def _ellipse_payload(

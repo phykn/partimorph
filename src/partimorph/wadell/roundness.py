@@ -5,7 +5,7 @@ from .boundary import extract_boundary
 from .corner import compute_corner_circles
 from .discretize import classify_concave_convex, discretize_boundary
 from .smoothing import smooth_boundary
-from ..misc import crop_mask
+from ..mask_ops import crop_mask
 from ..schema import Mask, Points
 
 
